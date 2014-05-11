@@ -269,8 +269,8 @@ int id action_context_bar 0x7f06001d
 int id action_menu_divider 0x7f060016
 int id action_menu_presenter 0x7f060017
 int id action_mode_close_button 0x7f060024
-int id action_search 0x7f06003f
-int id action_settings 0x7f060040
+int id action_search 0x7f060040
+int id action_settings 0x7f060041
 int id activity_chooser_view_content 0x7f060025
 int id always 0x7f06000b
 int id beginning 0x7f060011
@@ -322,6 +322,7 @@ int id title 0x7f06002b
 int id top_action_bar 0x7f060020
 int id up 0x7f060021
 int id useLogo 0x7f060003
+int id vi_thumbnail 0x7f06003f
 int id withText 0x7f06000c
 int integer abc_max_action_buttons 0x7f0a0000
 int layout abc_action_bar_decor 0x7f030000
@@ -353,7 +354,9 @@ int layout fragment_feed 0x7f030019
 int layout fragment_main 0x7f03001a
 int layout fragment_map 0x7f03001b
 int layout fragment_my_videos 0x7f03001c
-int layout support_simple_spinner_dropdown_item 0x7f03001d
+int layout list_video_item 0x7f03001d
+int layout list_video_item_vview 0x7f03001e
+int layout support_simple_spinner_dropdown_item 0x7f03001f
 int menu activity_main_actions 0x7f0d0000
 int menu main 0x7f0d0001
 int string abc_action_bar_home_description 0x7f0b0001
@@ -373,7 +376,8 @@ int string action_search 0x7f0b000e
 int string action_settings 0x7f0b000f
 int string app_name 0x7f0b000d
 int string persistent_camera 0x7f0b0010
-int string search_hint 0x7f0b0011
+int string search_hint 0x7f0b0012
+int string video_thumbnail_desc 0x7f0b0011
 int style AppBaseTheme 0x7f0c008b
 int style AppTheme 0x7f0c008c
 int style TextAppearance_AppCompat_Base_CompactMenu_Dialog 0x7f0c0063

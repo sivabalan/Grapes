@@ -131,8 +131,15 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		if(tab.getPosition() == 2)
 		{
 			String selection = MediaStore.Video.Media.DATA +" like ?";
-	        String[] selectionArgs = new String[]{"%Grapes%"};
-	        String[] projection = new String[]{MediaStore.Video.Media.SIZE,MediaStore.Video.VideoColumns.DURATION,MediaStore.Video.VideoColumns.DATE_TAKEN,MediaStore.Video.VideoColumns.RESOLUTION,MediaStore.Video.VideoColumns.DISPLAY_NAME};
+	        String[] selectionArgs = new String[]{"%"+getString(R.string.app_name)+"%"+config.appVideoDirName+"%"};
+	        String[] projection = new String[]{
+	        		MediaStore.Video.Media.SIZE,
+	        		MediaStore.Video.VideoColumns.DURATION,
+	        		MediaStore.Video.VideoColumns.DATE_TAKEN,
+	        		MediaStore.Video.VideoColumns.RESOLUTION,
+	        		MediaStore.Video.VideoColumns.DISPLAY_NAME,
+	        		MediaStore.Video.VideoColumns.DATA
+    		};
 	        videoCursor = getApplicationContext().getContentResolver().query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
 	                projection, selection, selectionArgs, MediaStore.Video.Media.DATE_TAKEN + " DESC");
 	        int count = videoCursor.getCount();

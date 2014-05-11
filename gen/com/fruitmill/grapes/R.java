@@ -1114,8 +1114,8 @@ containing a value of this type.
         public static final int action_menu_divider=0x7f060016;
         public static final int action_menu_presenter=0x7f060017;
         public static final int action_mode_close_button=0x7f060024;
-        public static final int action_search=0x7f06003f;
-        public static final int action_settings=0x7f060040;
+        public static final int action_search=0x7f060040;
+        public static final int action_settings=0x7f060041;
         public static final int activity_chooser_view_content=0x7f060025;
         public static final int always=0x7f06000b;
         public static final int beginning=0x7f060011;
@@ -1167,6 +1167,7 @@ containing a value of this type.
         public static final int top_action_bar=0x7f060020;
         public static final int up=0x7f060021;
         public static final int useLogo=0x7f060003;
+        public static final int vi_thumbnail=0x7f06003f;
         public static final int withText=0x7f06000c;
     }
     public static final class integer {
@@ -1224,7 +1225,9 @@ containing a value of this type.
         public static final int fragment_main=0x7f03001a;
         public static final int fragment_map=0x7f03001b;
         public static final int fragment_my_videos=0x7f03001c;
-        public static final int support_simple_spinner_dropdown_item=0x7f03001d;
+        public static final int list_video_item=0x7f03001d;
+        public static final int list_video_item_vview=0x7f03001e;
+        public static final int support_simple_spinner_dropdown_item=0x7f03001f;
     }
     public static final class menu {
         public static final int activity_main_actions=0x7f0d0000;
@@ -1277,7 +1280,8 @@ containing a value of this type.
         public static final int persistent_camera=0x7f0b0010;
         /**  Search  
          */
-        public static final int search_hint=0x7f0b0011;
+        public static final int search_hint=0x7f0b0012;
+        public static final int video_thumbnail_desc=0x7f0b0011;
     }
     public static final class style {
         /** 
