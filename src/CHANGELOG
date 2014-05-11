@@ -1,0 +1,11 @@
+#############################
+grapes - v0.1
+
+* Basic UI with ListView for My Videos
+* TODO:
+  - Use CursorLoader for fetching local video information
+  - Adding tags to captured videos (shopping, hiking etc ?)
+
+-- Sivabalan Thirunavukkarasu - May 10, 2014 - 21:10
+
+#############################

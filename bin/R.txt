@@ -269,11 +269,12 @@ int id action_context_bar 0x7f06001d
 int id action_menu_divider 0x7f060016
 int id action_menu_presenter 0x7f060017
 int id action_mode_close_button 0x7f060024
-int id action_search 0x7f06003d
-int id action_settings 0x7f06003e
+int id action_search 0x7f06003f
+int id action_settings 0x7f060040
 int id activity_chooser_view_content 0x7f060025
 int id always 0x7f06000b
 int id beginning 0x7f060011
+int id cameraView 0x7f06003d
 int id checkbox 0x7f06002d
 int id collapseActionView 0x7f06000d
 int id default_activity_button 0x7f060028
@@ -292,6 +293,7 @@ int id image 0x7f060027
 int id listMode 0x7f060001
 int id list_item 0x7f060029
 int id middle 0x7f060012
+int id myVideosListView 0x7f06003e
 int id never 0x7f060009
 int id none 0x7f060010
 int id normal 0x7f060000
