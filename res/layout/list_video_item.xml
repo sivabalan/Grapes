@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#ff8400" >
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:clipToPadding="false" >
 
     <ImageView
         android:id="@+id/vi_thumbnail"
         android:layout_width="fill_parent"
         android:layout_height="150dp"
         android:layout_margin="25dp"
+        android:background="#D3D3D3"
         android:contentDescription="@string/video_thumbnail_desc"
+        android:padding="10dp"
         android:src="@drawable/ic_action_video" />
 
     <TextView

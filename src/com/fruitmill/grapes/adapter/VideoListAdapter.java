@@ -1,14 +1,8 @@
 package com.fruitmill.grapes.adapter;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import android.app.Activity;
 import android.content.Context;
-import android.database.Cursor;
-import android.media.ThumbnailUtils;
-import android.provider.MediaStore;
-import android.provider.MediaStore.Video.Thumbnails;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,40 +18,17 @@ public class VideoListAdapter extends BaseAdapter {
 	
 	private int count;
 	private Context vContext;
-	private int videoColumnIndex;
-	private Cursor vCursor;
 	private List<VideoItem> videoListMap;
 	private VideoView vpVideoView;
 	private FrameLayout vpVideoFrame;
-	private VideoItem vItem;
 	
-	public VideoListAdapter(int count, Context vContext, Cursor vCursor, Activity parent) {
+	public VideoListAdapter(int count, Context vContext, List<VideoItem> videoList, View videoListView) {
 		super();
 		this.count = count;
 		this.vContext = vContext;
-		this.vCursor = vCursor;
-		this.videoListMap = new ArrayList<>();
-		this.vpVideoView = (VideoView) parent.findViewById(R.id.vp_video_view);
-		this.vpVideoFrame = (FrameLayout) parent.findViewById(R.id.vp_video_frame);
-		
-		populateVideoList(vCursor);
-	}
-	
-	private void populateVideoList(Cursor vc) {
-		
-		for(int i=0;i<count;i++)
-		{
-			vItem = new VideoItem();
-			videoColumnIndex = vCursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA);
-			vCursor.moveToPosition(i);
-	        vItem.setVideoPath(vCursor.getString(videoColumnIndex));
-	        videoColumnIndex = vCursor.getColumnIndexOrThrow(MediaStore.Video.Media.RESOLUTION);
-	        vCursor.moveToPosition(i);
-	        vItem.setvLon(vCursor.getString(videoColumnIndex));
-	        vItem.setvThumbnail(ThumbnailUtils.createVideoThumbnail(vItem.getVideoPath(), Thumbnails.FULL_SCREEN_KIND));
-	        videoListMap.add(vItem);
-		}
-        
+		this.videoListMap = videoList;
+		this.vpVideoView = (VideoView) videoListView.findViewById(R.id.vp_video_view);
+		this.vpVideoFrame = (FrameLayout) videoListView.findViewById(R.id.vp_video_frame);
 	}
 	
 	@Override
@@ -92,7 +63,7 @@ public class VideoListAdapter extends BaseAdapter {
 			@Override
 			public void onClick(View v) {
 				vpVideoFrame.setVisibility(View.VISIBLE);
-				vpVideoView.setVideoPath(videoListMap.get(itemPosition).getVideoPath());
+				vpVideoView.setVideoURI(videoListMap.get(itemPosition).getVideoURI());
 				vpVideoView.start();
 			}
 		});

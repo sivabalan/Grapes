@@ -1,6 +1,7 @@
 package com.fruitmill.grapes.adapter;
 
 import android.graphics.Bitmap;
+import android.net.Uri;
 
 public class VideoItem {
 	
@@ -8,6 +9,7 @@ public class VideoItem {
 	private String videoPath;
 	private String vLon;
 	private String vLat;
+	private Uri videoURI;
 	
 	public VideoItem() {
 		super();
@@ -44,6 +46,14 @@ public class VideoItem {
 
 	public void setvLat(String vLat) {
 		this.vLat = vLat;
+	}
+
+	public Uri getVideoURI() {
+		return videoURI;
+	}
+
+	public void setVideoURI(Uri videoURI) {
+		this.videoURI = videoURI;
 	}
 	
 	

@@ -1,44 +1,49 @@
 package com.fruitmill.grapes;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
-import com.fruitmill.grapes.adapter.TabsPagerAdapter;
-import com.fruitmill.grapes.adapter.VideoListAdapter;
-import com.fruitmill.grapes.R;
-
+import android.app.ActionBar;
+import android.app.ActionBar.Tab;
+import android.app.FragmentTransaction;
+import android.app.SearchManager;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.MediaStore.Images.Thumbnails;
 import android.provider.Settings;
-import android.provider.Settings.Secure;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.view.MenuItemCompat;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.MenuItem.OnActionExpandListener;
 import android.view.View.OnClickListener;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.SearchView;
-import android.widget.Toast;
-import android.widget.VideoView;
 import android.widget.SearchView.OnCloseListener;
-import android.app.ActionBar;
-import android.app.SearchManager;
-import android.app.ActionBar.Tab;
-import android.app.FragmentTransaction;
-import android.content.Context;
-import android.content.Intent;
-import android.database.Cursor;
-import android.location.Criteria;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
+import android.widget.Toast;
+
+import com.fruitmill.grapes.adapter.TabsPagerAdapter;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MainActivity extends FragmentActivity implements ActionBar.TabListener {
 	
@@ -55,13 +60,13 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private Grapes config;
 	private Uri mVideoUri;
 	private File capturedVideoFile;
-	private Cursor videoCursor;
+
 	
 	private LocationManager locationManager;
 	private Criteria criteria;
 	private String provider;
 	private MyLocationListener locationListener;
-	private Location location;
+	public static Location location;
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,12 +81,15 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
             Log.d(getString(R.string.app_name), "Storage not mounted");
 	    } else {
-	        File directory = new File(Environment.getExternalStorageDirectory()+File.separator+getString(R.string.app_name)+File.separator+config.appVideoDirName);
+	        File directory = new File(Environment.getExternalStorageDirectory()+File.separator+getString(R.string.app_name)+File.separator+Grapes.appVideoDirName);
 	        directory.mkdirs();
-	        if(directory.isDirectory())
+	        File thumbDir = new File(Environment.getExternalStorageDirectory()+File.separator+getString(R.string.app_name)+File.separator+Grapes.appThumbsDirName);
+	        thumbDir.mkdirs();
+	        if(directory.isDirectory() && thumbDir.isDirectory())
 	        {
-	        	config.appVideoDir = directory;
-	        	config.appRootDir = directory.getParentFile();
+	        	Grapes.appThumbsDir = thumbDir;
+	        	Grapes.appVideoDir = directory;
+	        	Grapes.appRootDir = directory.getParentFile();
 	        }    	
 	    }
         
@@ -131,7 +139,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		});
 		
 		// Get the location manager
-		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);;
+		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		
 		// Define the criteria how to select the location provider
 		criteria = new Criteria();
 		criteria.setAccuracy(Criteria.ACCURACY_FINE);	
@@ -154,7 +163,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			startActivity(intent);
 		}
 		// location updates: at least 1 meter and 200millsecs change
-		locationManager.requestLocationUpdates(provider, 3000, 1, locationListener);
+		locationManager.requestLocationUpdates(provider, config.getLocationUpdateInterval(), 1, locationListener);
     }
 
     private class MyLocationListener implements LocationListener {
@@ -209,22 +218,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			
 			break;
 		case MY_VIDEOS_VIEW:
-			String selection = MediaStore.Video.Media.DATA +" like ?";
-	        String[] selectionArgs = new String[]{"%"+getString(R.string.app_name)+"%"+config.appVideoDirName+"%"};
-	        String[] projection = new String[]{
-	        		MediaStore.Video.Media.SIZE,
-	        		MediaStore.Video.VideoColumns.DURATION,
-	        		MediaStore.Video.VideoColumns.DATE_TAKEN,
-	        		MediaStore.Video.VideoColumns.RESOLUTION,
-	        		MediaStore.Video.VideoColumns.DISPLAY_NAME,
-	        		MediaStore.Video.VideoColumns.DATA,
-	        		MediaStore.Video.VideoColumns.LONGITUDE
-    		};
-	        videoCursor = getApplicationContext().getContentResolver().query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-	                projection, selection, selectionArgs, MediaStore.Video.Media.DATE_TAKEN + " DESC");
-	        int count = videoCursor.getCount();
-	        ListView videoListView = (ListView) findViewById(R.id.myVideosListView);
-	        videoListView.setAdapter(new VideoListAdapter(count, getApplicationContext(), videoCursor, this));
+			
 			break;
 		default:
 			return;
@@ -292,7 +286,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	
 	private void dispatchTakeVideoIntent() {
 		Intent takeVideoIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-		capturedVideoFile = new File(config.appVideoDir.getAbsolutePath(), System.currentTimeMillis()+".mp4");
+		capturedVideoFile = new File(Grapes.appVideoDir.getAbsolutePath(), System.currentTimeMillis()+".mp4");
 		takeVideoIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0);
 		takeVideoIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(capturedVideoFile));
 		takeVideoIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, config.videoDuration);
@@ -300,9 +294,33 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 	
 	private void handleCameraVideo(Intent intent) {
-		mVideoUri = intent.getData();
-		sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(capturedVideoFile)));
+		
+		Bitmap tempThumbnail = ThumbnailUtils.createVideoThumbnail(capturedVideoFile.getAbsolutePath(), Thumbnails.FULL_SCREEN_KIND);
+		
+		String fileName = capturedVideoFile.getName();
+		int pos = fileName.lastIndexOf(".");
+		if (pos > 0) {
+		    fileName = fileName.substring(0, pos);
+		}
+		
+		File thumbFile = new File(Grapes.appThumbsDir, fileName+".png");
+	    try {
+			FileOutputStream fOut = new FileOutputStream(thumbFile);
 
+			tempThumbnail.compress(Bitmap.CompressFormat.PNG, 85, fOut);
+			fOut.flush();
+			fOut.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(capturedVideoFile)));
+		sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(thumbFile)));
+		
 		Toast.makeText(this, "Video saved", Toast.LENGTH_SHORT).show();
 		
 	}
