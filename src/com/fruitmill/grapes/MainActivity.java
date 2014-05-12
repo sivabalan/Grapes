@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.provider.Settings.Secure;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.MenuItemCompat;
@@ -34,6 +35,10 @@ import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 
 public class MainActivity extends FragmentActivity implements ActionBar.TabListener {
 	
@@ -42,12 +47,21 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private ActionBar actionBar;
 	private Tab prevTab;
 	// Tab titles
+	private static final int FEED_VIEW = 0;
+	private static final int MAP_VIEW = 1;
+	private static final int MY_VIDEOS_VIEW = 2;
 	private String[] tabs = { "Feed", "Map", "My Videos" };
 	private static final int ACTION_TAKE_VIDEO = 1;
 	private Grapes config;
 	private Uri mVideoUri;
 	private File capturedVideoFile;
 	private Cursor videoCursor;
+	
+	private LocationManager locationManager;
+	private Criteria criteria;
+	private String provider;
+	private MyLocationListener locationListener;
+	private Location location;
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,8 +129,67 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		        dispatchTakeVideoIntent();
 		    }
 		});
+		
+		// Get the location manager
+		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);;
+		// Define the criteria how to select the location provider
+		criteria = new Criteria();
+		criteria.setAccuracy(Criteria.ACCURACY_FINE);	
+
+		criteria.setCostAllowed(false); 
+
+		// get the best provider depending on the criteria
+		provider = locationManager.getBestProvider(criteria, false);
+
+		// the last known location of this provider
+		Location location = locationManager.getLastKnownLocation(provider);
+
+		locationListener = new MyLocationListener();
+
+		if (location != null) {
+			locationListener.onLocationChanged(location);
+		} else {
+			// leads to the settings because there is no last known location
+			Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+			startActivity(intent);
+		}
+		// location updates: at least 1 meter and 200millsecs change
+		locationManager.requestLocationUpdates(provider, 3000, 1, locationListener);
     }
 
+    private class MyLocationListener implements LocationListener {
+
+    	@Override
+    	public void onLocationChanged(Location loc) {
+    		// Initialize the location fields
+    		String op = "Latitude: "+String.valueOf(loc.getLatitude()) +
+    				"Longitude: "+String.valueOf(loc.getLongitude());
+
+    		location = loc;
+
+    		Toast.makeText(getApplicationContext(),  "Location changed : "+op, Toast.LENGTH_SHORT).show();
+    	}
+
+    	@Override
+    	public void onStatusChanged(String provider, int status, Bundle extras) {
+    		Toast.makeText(getApplicationContext(), provider + "'s status changed to "+status +"!",
+    				Toast.LENGTH_SHORT).show();
+    	}
+
+    	@Override
+    	public void onProviderEnabled(String provider) {
+    		Toast.makeText(getApplicationContext(), "Provider " + provider + " enabled!",
+    				Toast.LENGTH_SHORT).show();
+
+    	}
+
+    	@Override
+    	public void onProviderDisabled(String provider) {
+    		Toast.makeText(getApplicationContext(), "Provider " + provider + " disabled!",
+    				Toast.LENGTH_SHORT).show();
+    	}
+    }
+    
 	@Override
 	public void onTabReselected(Tab tab, FragmentTransaction ft) {
 		// TODO Auto-generated method stub
@@ -128,8 +201,14 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// on tab selected
 		// show respected fragment view
 		viewPager.setCurrentItem(tab.getPosition());
-		if(tab.getPosition() == 2)
-		{
+		switch (tab.getPosition()) {
+		case FEED_VIEW:
+			
+			break;
+		case MAP_VIEW:
+			
+			break;
+		case MY_VIDEOS_VIEW:
 			String selection = MediaStore.Video.Media.DATA +" like ?";
 	        String[] selectionArgs = new String[]{"%"+getString(R.string.app_name)+"%"+config.appVideoDirName+"%"};
 	        String[] projection = new String[]{
@@ -138,14 +217,20 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	        		MediaStore.Video.VideoColumns.DATE_TAKEN,
 	        		MediaStore.Video.VideoColumns.RESOLUTION,
 	        		MediaStore.Video.VideoColumns.DISPLAY_NAME,
-	        		MediaStore.Video.VideoColumns.DATA
+	        		MediaStore.Video.VideoColumns.DATA,
+	        		MediaStore.Video.VideoColumns.LONGITUDE
     		};
 	        videoCursor = getApplicationContext().getContentResolver().query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
 	                projection, selection, selectionArgs, MediaStore.Video.Media.DATE_TAKEN + " DESC");
 	        int count = videoCursor.getCount();
 	        ListView videoListView = (ListView) findViewById(R.id.myVideosListView);
-	        videoListView.setAdapter(new VideoListAdapter(count, getApplicationContext(), videoCursor));
+	        videoListView.setAdapter(new VideoListAdapter(count, getApplicationContext(), videoCursor, this));
+			break;
+		default:
+			return;
 		}
+		
+			
 	}
 
 	@Override
@@ -198,6 +283,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// Take appropriate action for each action item click
 		switch (item.getItemId()) {
 			case R.id.action_settings:
+				
 				return true;
 			default:
 				return super.onOptionsItemSelected(item);

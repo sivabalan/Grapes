@@ -5,6 +5,7 @@ grapes - v0.1
 * TODO:
   - Use CursorLoader for fetching local video information
   - Adding tags to captured videos (shopping, hiking etc ?)
+  - Improve video loading mechanism
 
 -- Sivabalan Thirunavukkarasu - May 10, 2014 - 21:10
 
