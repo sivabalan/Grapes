@@ -82,7 +82,9 @@ public class MyVideosFragment extends Fragment {
 //        		MediaStore.Video.VideoColumns.RESOLUTION,
 //        		MediaStore.Video.VideoColumns.DISPLAY_NAME,
         		MediaStore.Video.VideoColumns.DATA,
-        		MediaStore.Video.VideoColumns._ID
+        		MediaStore.Video.VideoColumns._ID,
+        		MediaStore.Video.VideoColumns.LATITUDE,
+        		MediaStore.Video.VideoColumns.LONGITUDE
 		};
         videoCursor = vContext.getContentResolver().query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
                 projection, selection, selectionArgs, MediaStore.Video.Media.DATE_TAKEN + " DESC");
@@ -108,6 +110,12 @@ public class MyVideosFragment extends Fragment {
 	        videoCursor.moveToPosition(i);
 	        vItem.setVideoURI(Uri.parse(MediaStore.Video.Media.EXTERNAL_CONTENT_URI.toString()+"/"+videoCursor.getString(videoColumnIndex)));
 	        vItem.setvThumbnail(BitmapFactory.decodeFile(Grapes.appThumbsDir.getAbsolutePath()+File.separator+thumbName+".png"));
+	        videoColumnIndex = videoCursor.getColumnIndexOrThrow(MediaStore.Video.Media.LONGITUDE);
+	        videoCursor.moveToPosition(i);
+	        vItem.setvLon(videoCursor.getDouble(videoColumnIndex));
+	        videoColumnIndex = videoCursor.getColumnIndexOrThrow(MediaStore.Video.Media.LATITUDE);
+	        videoCursor.moveToPosition(i);
+	        vItem.setvLat(videoCursor.getDouble(videoColumnIndex));
 	        localVideoList.add(vItem);
 		}
         

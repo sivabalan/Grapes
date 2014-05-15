@@ -1,14 +1,17 @@
 package com.fruitmill.grapes;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.provider.MediaStore.Video.Thumbnails;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -29,6 +32,9 @@ public class FeedFragment extends Fragment {
 	private VideoView vpVideoView;
 	private FrameLayout vpVideoFrame;
 	private List<VideoItem> videoList;
+	private Cursor videoCursor;
+	private int videoColumnIndex;
+
 	
 	private String[] remoteVideoList = {
 			"http://dl.dropboxusercontent.com/1/view/vrchc1ywv40lvbr/grapes-public/961572535",
@@ -89,4 +95,46 @@ public class FeedFragment extends Fragment {
 		}
 		return localVideoList;
 	}
+	
+//	private List<VideoItem> fetchLocalVideos(Context vContext) {
+//		String selection = MediaStore.Video.Media.DATA +" like ?";
+//        String[] selectionArgs = new String[]{"%"+getString(R.string.app_name)+"%"+Grapes.appVideoDirName+"%"};
+//        String[] projection = new String[]{
+////        		MediaStore.Video.Media.SIZE,
+////        		MediaStore.Video.VideoColumns.DURATION,
+////        		MediaStore.Video.VideoColumns.DATE_TAKEN,
+////        		MediaStore.Video.VideoColumns.RESOLUTION,
+////        		MediaStore.Video.VideoColumns.DISPLAY_NAME,
+//        		MediaStore.Video.VideoColumns.DATA,
+//        		MediaStore.Video.VideoColumns._ID
+//		};
+//        videoCursor = vContext.getContentResolver().query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+//                projection, selection, selectionArgs, MediaStore.Video.Media.DATE_TAKEN + " DESC");
+//        int count = videoCursor.getCount();
+//        VideoItem vItem;
+//        String thumbName;
+//        List<VideoItem> localVideoList = new ArrayList<VideoItem>();
+//        for(int i=0;i<count;i++)
+//		{
+//			vItem = new VideoItem();
+//	        videoColumnIndex = videoCursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA);
+//	        videoCursor.moveToPosition(i);
+//			vItem.setVideoPath(videoCursor.getString(videoColumnIndex));
+//			
+//			thumbName = vItem.getVideoPath();
+//			int pos1 = thumbName.lastIndexOf(File.separator);
+//			int pos2 = thumbName.lastIndexOf(".");
+//			if (pos2 > 0) {
+//				thumbName = thumbName.substring(pos1, pos2);
+//			}
+//			
+//	        videoColumnIndex = videoCursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID);
+//	        videoCursor.moveToPosition(i);
+//	        vItem.setVideoURI(Uri.parse(MediaStore.Video.Media.EXTERNAL_CONTENT_URI.toString()+"/"+videoCursor.getString(videoColumnIndex)));
+//	        vItem.setvThumbnail(BitmapFactory.decodeFile(Grapes.appThumbsDir.getAbsolutePath()+File.separator+thumbName+".png"));
+//	        localVideoList.add(vItem);
+//		}
+//        
+//        return localVideoList;
+//	}
 }

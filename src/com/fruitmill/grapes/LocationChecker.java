@@ -30,7 +30,7 @@ public class LocationChecker extends Activity {
 		provider = locationManager.getBestProvider(criteria, false);
 	    
 		// the last known location of this provider
-		Location location = locationManager.getLastKnownLocation(provider);
+		location = locationManager.getLastKnownLocation(provider);
 		
 		locationListener = new MyLocationListener();
 		

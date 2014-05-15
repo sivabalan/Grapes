@@ -9,6 +9,7 @@ import android.app.ActionBar;
 import android.app.ActionBar.Tab;
 import android.app.FragmentTransaction;
 import android.app.SearchManager;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -18,13 +19,14 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.provider.MediaStore.Images.Thumbnails;
 import android.provider.Settings;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.Menu;
@@ -38,12 +40,6 @@ import android.widget.SearchView.OnCloseListener;
 import android.widget.Toast;
 
 import com.fruitmill.grapes.adapter.TabsPagerAdapter;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.CameraPosition;
-import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MainActivity extends FragmentActivity implements ActionBar.TabListener {
 	
@@ -60,6 +56,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private Grapes config;
 	private Uri mVideoUri;
 	private File capturedVideoFile;
+	private Handler handler;
 
 	
 	private LocationManager locationManager;
@@ -164,6 +161,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		}
 		// location updates: at least 1 meter and 200millsecs change
 		locationManager.requestLocationUpdates(provider, config.getLocationUpdateInterval(), 1, locationListener);
+		
+		
     }
 
     private class MyLocationListener implements LocationListener {
@@ -294,7 +293,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 	
 	private void handleCameraVideo(Intent intent) {
-		
+				
 		Bitmap tempThumbnail = ThumbnailUtils.createVideoThumbnail(capturedVideoFile.getAbsolutePath(), Thumbnails.FULL_SCREEN_KIND);
 		
 		String fileName = capturedVideoFile.getName();
@@ -311,30 +310,76 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			fOut.flush();
 			fOut.close();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
 		sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(capturedVideoFile)));
 		sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(thumbFile)));
 		
-		Toast.makeText(this, "Video saved", Toast.LENGTH_SHORT).show();
+		ContentValues values = new ContentValues(2);
+		values.put(MediaStore.Video.VideoColumns.LATITUDE, location.getLatitude());
+		values.put(MediaStore.Video.VideoColumns.LONGITUDE, location.getLongitude());
 		
+		geoLocUpdate(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values, MediaStore.Video.VideoColumns.DATA + " LIKE ?", new String[] { capturedVideoFile.getAbsolutePath() });
+
+	}
+	
+	public void geoLocUpdate(Uri uri, ContentValues values, String where, String[] selectionArgs)
+	{
+		Bundle args = new Bundle();
+		args.putParcelable  ("URI", uri);
+		args.putParcelable  ("VALUES", values);
+		args.putString      ("WHERE", where);
+		args.putStringArray ("SELECTION_ARGS", selectionArgs);
+
+		new AsyncUpdate().execute(args);
+		
+	}
+
+	final class AsyncUpdate extends AsyncTask< Bundle, Void, Integer>
+	{
+		@Override
+		protected Integer doInBackground(Bundle... params) {
+			Bundle args = params[0];
+			Uri             uri             = args.getParcelable("URI");
+			ContentValues   values          = args.getParcelable("VALUES");
+			String          where           = args.getString("WHERE");
+			String[]        selectionArgs   = args.getStringArray("SELECTION_ARGS");
+
+			int rowsUpdated = 0;
+			while (rowsUpdated != 1)
+			{
+				rowsUpdated = getContentResolver().update(uri, values, where, selectionArgs);
+			}
+			
+			return rowsUpdated;
+		}
+
+		@Override
+		protected void onPostExecute(Integer result)
+		{
+			if (result == 1) {
+				Toast.makeText(MainActivity.this, "Video saved @ "+location.getLatitude()+ " : " +location.getLongitude(), Toast.LENGTH_SHORT).show();
+			}
+			else {
+				// TODO: Ask user to choose location on a map perhaps?
+				Log.v("hi",capturedVideoFile.getAbsolutePath());
+			}
+		}
 	}
 	
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		switch (requestCode) {
 		
-		case ACTION_TAKE_VIDEO: {
-			if (resultCode == RESULT_OK) {
-				handleCameraVideo(data);
-			}
-			break;
-		} 
+			case ACTION_TAKE_VIDEO: {
+				if (resultCode == RESULT_OK) {
+					handleCameraVideo(data);
+				}
+				break;
+			} 
 		} 
 	}
 	

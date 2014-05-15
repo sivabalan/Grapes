@@ -7,8 +7,8 @@ public class VideoItem {
 	
 	private Bitmap vThumbnail;
 	private String videoPath;
-	private String vLon;
-	private String vLat;
+	private double vLon;
+	private double vLat;
 	private Uri videoURI;
 	
 	public VideoItem() {
@@ -32,19 +32,19 @@ public class VideoItem {
 		this.videoPath = videoPath;
 	}
 
-	public String getvLon() {
+	public double getvLon() {
 		return vLon;
 	}
 
-	public void setvLon(String vLon) {
+	public void setvLon(double vLon) {
 		this.vLon = vLon;
 	}
 
-	public String getvLat() {
+	public double getvLat() {
 		return vLat;
 	}
 
-	public void setvLat(String vLat) {
+	public void setvLat(double vLat) {
 		this.vLat = vLat;
 	}
 

@@ -69,7 +69,8 @@ public class VideoListAdapter extends BaseAdapter {
 		});
         
         TextView thumbnailLabel = (TextView) videoItemRow.findViewById(R.id.vi_geo);
-        thumbnailLabel.setText(videoListMap.get(position).getvLon()); 
+        thumbnailLabel.setText(Double.toString(videoListMap.get(position).getvLat())+" : "+
+        		Double.toString(videoListMap.get(position).getvLon())+" : "+videoListMap.get(position).getVideoURI()); 
         
 		return videoItemRow;
 	}

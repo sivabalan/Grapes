@@ -40,6 +40,9 @@ public class MapFragment extends Fragment {
 		Marker locationMarker = googleMap.addMarker(marker);
 		locationMarker.showInfoWindow();
 		
+		googleMap.getUiSettings().setMyLocationButtonEnabled(true);
+		googleMap.setMyLocationEnabled(true);
+		
 		return rootView;
 	}
 
