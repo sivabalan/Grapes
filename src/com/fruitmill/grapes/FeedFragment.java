@@ -37,6 +37,11 @@ public class FeedFragment extends Fragment {
 
 	
 	private String[] remoteVideoList = {
+			"https://www.dropbox.com/s/ny13me38k5ym2ay/955847023.mp4",
+			"http://dl.dropboxusercontent.com/1/view/ny13me38k5ym2ay/grapes-public/955847023.mp4",
+			"https://db.tt/fGGgbXK4",
+			"https://db.tt/aQtJ5RME",
+			"https://db.tt/7i9BkY6e",
 			"http://dl.dropboxusercontent.com/1/view/vrchc1ywv40lvbr/grapes-public/961572535",
 			"http://dl.dropboxusercontent.com/1/view/qobsyrdhj9inssd/grapes-public/-1387871915",
 			"http://dl.dropboxusercontent.com/1/view/v9salzyvfhqp1zt/grapes-public/1558049880",
@@ -88,6 +93,8 @@ public class FeedFragment extends Fragment {
 		for(int i=0;i<remoteVideoList.length;i++)
 		{
 			vItem = new VideoItem();
+			Uri uri = Uri.parse(remoteVideoList[i]);
+			
 			vItem.setVideoURI(Uri.parse(remoteVideoList[i]));
 			vItem.setvThumbnail(ThumbnailUtils.createVideoThumbnail(remoteVideoList[i], Thumbnails.MINI_KIND));
 			//Toast.makeText(vContext, remoteVideoList[i], Toast.LENGTH_SHORT).show();
