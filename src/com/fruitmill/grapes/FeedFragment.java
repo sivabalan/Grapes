@@ -1,17 +1,13 @@
 package com.fruitmill.grapes;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import android.content.Context;
-import android.database.Cursor;
-import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.provider.MediaStore.Video.Thumbnails;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -21,7 +17,6 @@ import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ListView;
-import android.widget.Toast;
 import android.widget.VideoView;
 
 import com.fruitmill.grapes.adapter.VideoItem;
@@ -32,11 +27,13 @@ public class FeedFragment extends Fragment {
 	private VideoView vpVideoView;
 	private FrameLayout vpVideoFrame;
 	private List<VideoItem> videoList;
-	private Cursor videoCursor;
-	private int videoColumnIndex;
-
 	
 	private String[] remoteVideoList = {
+			"https://www.dropbox.com/s/ny13me38k5ym2ay/955847023.mp4",
+			"http://dl.dropboxusercontent.com/1/view/ny13me38k5ym2ay/grapes-public/955847023.mp4",
+			"https://db.tt/fGGgbXK4",
+			"https://db.tt/aQtJ5RME",
+			"https://db.tt/7i9BkY6e",
 			"http://dl.dropboxusercontent.com/1/view/vrchc1ywv40lvbr/grapes-public/961572535",
 			"http://dl.dropboxusercontent.com/1/view/qobsyrdhj9inssd/grapes-public/-1387871915",
 			"http://dl.dropboxusercontent.com/1/view/v9salzyvfhqp1zt/grapes-public/1558049880",

@@ -8,4 +8,5 @@
 	<string name="video_thumbnail_desc">Video near you!</string>
 	<!-- Search  -->
     <string name="search_hint">Search locations..</string>
+    <string name="dropbox_login">Storage Login</string>
 </resources>

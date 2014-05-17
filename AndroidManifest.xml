@@ -45,7 +45,18 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        
+        <activity
+      		android:name="com.dropbox.client2.android.AuthActivity"
+      		android:launchMode="singleTask"
+      		android:configChanges="orientation|keyboard">
+      		<intent-filter>
+        		<!-- Change this to be db- followed by your app key -->
+        		<data android:scheme="db-kuc88ae9y2coj3j" />
+        		<action android:name="android.intent.action.VIEW" />
+        		<category android:name="android.intent.category.BROWSABLE"/>
+        		<category android:name="android.intent.category.DEFAULT" />
+      		</intent-filter>
+    	</activity>
         <meta-data
     		android:name="com.google.android.gms.version"
     		android:value="@integer/google_play_services_version" />

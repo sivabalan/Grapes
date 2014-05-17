@@ -12,6 +12,9 @@ import android.app.SearchManager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.location.Criteria;
 import android.location.Location;
@@ -22,7 +25,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
 import android.provider.MediaStore;
 import android.provider.MediaStore.Images.Thumbnails;
 import android.provider.Settings;
@@ -39,7 +41,12 @@ import android.widget.SearchView;
 import android.widget.SearchView.OnCloseListener;
 import android.widget.Toast;
 
+import com.dropbox.client2.DropboxAPI;
+import com.dropbox.client2.android.AndroidAuthSession;
+import com.dropbox.client2.session.AccessTokenPair;
+import com.dropbox.client2.session.AppKeyPair;
 import com.fruitmill.grapes.adapter.TabsPagerAdapter;
+import com.fruitmill.grapes.adapter.VideoItem;
 
 public class MainActivity extends FragmentActivity implements ActionBar.TabListener {
 	
@@ -56,7 +63,10 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private Grapes config;
 	private Uri mVideoUri;
 	private File capturedVideoFile;
-	private Handler handler;
+	
+	@SuppressWarnings("unused")
+	private boolean mLoggedIn;
+	DropboxAPI<AndroidAuthSession> mApi;
 
 	
 	private LocationManager locationManager;
@@ -68,6 +78,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        AndroidAuthSession session = buildSession();
+        mApi = new DropboxAPI<AndroidAuthSession>(session);
+		
         setContentView(R.layout.activity_main);
         config = (Grapes)getApplication();
         
@@ -278,6 +291,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			case R.id.action_settings:
 				
 				return true;
+			case R.id.dropbox_login:
+				mApi.getSession().startOAuth2Authentication(MainActivity.this);
+			
 			default:
 				return super.onOptionsItemSelected(item);
 		}
@@ -406,4 +422,103 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	    // get the file url
 	    mVideoUri = savedInstanceState.getParcelable("captured_video_uri");
 	}
+	
+	@Override
+    protected void onResume() {
+        super.onResume();
+        AndroidAuthSession session = mApi.getSession();
+
+        // The next part must be inserted in the onResume() method of the
+        // activity from which session.startAuthentication() was called, so
+        // that Dropbox authentication completes properly.
+        if (session.authenticationSuccessful()) {
+            try {
+                // Mandatory call to complete the auth
+                session.finishAuthentication();
+
+                // Store it locally in our app for later use
+                storeAuth(session);
+                String selection = MediaStore.Video.Media.DATA +" like ?";
+		        String[] selectionArgs = new String[]{"%"+getString(R.string.app_name)+"%"+Grapes.appVideoDirName+"%"};
+		        String[] projection = new String[]{
+		        		MediaStore.Video.VideoColumns.DATA,
+		        		MediaStore.Video.VideoColumns.LATITUDE,
+		        		MediaStore.Video.VideoColumns.LONGITUDE
+				};
+		        
+		        Cursor videoCursor =  MainActivity.this.getContentResolver().query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+		                projection, selection, selectionArgs, MediaStore.Video.Media.DATE_TAKEN + " DESC");
+		        
+                DropBox.setLoggedIn(true, mApi, videoCursor);
+                this.mLoggedIn = true;
+            } catch (IllegalStateException e) {
+                showToast("Couldn't authenticate with Dropbox:" + e.getLocalizedMessage());
+                Log.i(DropBox.TAG, "Error authenticating", e);
+            }
+        }
+    }
+	
+	private void showToast(String msg) {
+        Toast error = Toast.makeText(this, msg, Toast.LENGTH_LONG);
+        error.show();
+    }
+
+	public static void sendShareToServer(VideoItem video){
+		
+	}
+	
+	/**
+     * Shows keeping the access keys returned from Trusted Authenticator in a local
+     * store, rather than storing user name & password, and re-authenticating each
+     * time (which is not to be done, ever).
+     */
+    private void loadAuth(AndroidAuthSession session) {
+        SharedPreferences prefs = getSharedPreferences(DropBox.ACCOUNT_PREFS_NAME, 0);
+        String key = prefs.getString(DropBox.ACCESS_KEY_NAME, null);
+        String secret = prefs.getString(DropBox.ACCESS_SECRET_NAME, null);
+        if (key == null || secret == null || key.length() == 0 || secret.length() == 0) return;
+
+        if (key.equals("oauth2:")) {
+            // If the key is set to "oauth2:", then we can assume the token is for OAuth 2.
+            session.setOAuth2AccessToken(secret);
+        } else {
+            // Still support using old OAuth 1 tokens.
+            session.setAccessTokenPair(new AccessTokenPair(key, secret));
+        }
+    }
+
+    /**
+     * Shows keeping the access keys returned from Trusted Authenticator in a local
+     * store, rather than storing user name & password, and re-authenticating each
+     * time (which is not to be done, ever).
+     */
+    private void storeAuth(AndroidAuthSession session) {
+        // Store the OAuth 2 access token, if there is one.
+        String oauth2AccessToken = session.getOAuth2AccessToken();
+        if (oauth2AccessToken != null) {
+            SharedPreferences prefs = getSharedPreferences(DropBox.ACCOUNT_PREFS_NAME, 0);
+            Editor edit = prefs.edit();
+            edit.putString(DropBox.ACCESS_KEY_NAME, "oauth2:");
+            edit.putString(DropBox.ACCESS_SECRET_NAME, oauth2AccessToken);
+            edit.commit();
+            return;
+        }
+        
+    }
+
+    @SuppressWarnings("unused")
+	private void clearKeys() {
+        SharedPreferences prefs = getSharedPreferences(DropBox.ACCOUNT_PREFS_NAME, 0);
+        Editor edit = prefs.edit();
+        edit.clear();
+        edit.commit();
+    }
+
+    private AndroidAuthSession buildSession() {
+        AppKeyPair appKeyPair = new AppKeyPair(DropBox.APP_KEY, DropBox.APP_SECRET);
+
+        AndroidAuthSession session = new AndroidAuthSession(appKeyPair);
+        loadAuth(session);
+        return session;
+    }
 }
