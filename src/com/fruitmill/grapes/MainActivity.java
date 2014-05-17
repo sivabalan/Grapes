@@ -63,11 +63,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private Grapes config;
 	private Uri mVideoUri;
 	private File capturedVideoFile;
-	
 	@SuppressWarnings("unused")
 	private boolean mLoggedIn;
 	DropboxAPI<AndroidAuthSession> mApi;
-
 	
 	private LocationManager locationManager;
 	private Criteria criteria;
@@ -468,6 +466,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 	
 	/**
+=======
+    /**
+>>>>>>> 8fe43c279347b5ba100526d75b07d19f53d9e72e
      * Shows keeping the access keys returned from Trusted Authenticator in a local
      * store, rather than storing user name & password, and re-authenticating each
      * time (which is not to be done, ever).
