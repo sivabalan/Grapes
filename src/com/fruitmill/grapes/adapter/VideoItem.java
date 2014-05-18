@@ -7,6 +7,8 @@ public class VideoItem {
 	
 	private Bitmap vThumbnail;
 	private String videoPath;
+	private String thumbPath;
+	private String thumbBase64;
 	private double vLon;
 	private double vLat;
 	private Uri videoURI;
@@ -54,6 +56,22 @@ public class VideoItem {
 
 	public void setVideoURI(Uri videoURI) {
 		this.videoURI = videoURI;
+	}
+
+	public String getThumbBase64() {
+		return thumbBase64;
+	}
+
+	public void setThumbBase64(String thumbBase64) {
+		this.thumbBase64 = thumbBase64;
+	}
+
+	public String getThumbPath() {
+		return thumbPath;
+	}
+
+	public void setThumbPath(String thumbPath) {
+		this.thumbPath = thumbPath;
 	}
 	
 	

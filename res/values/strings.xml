@@ -9,4 +9,5 @@
 	<!-- Search  -->
     <string name="search_hint">Search locations..</string>
     <string name="dropbox_login">Storage Login</string>
+    <string name="feed_refresh_rate">Feed Refresh Rate</string>
 </resources>

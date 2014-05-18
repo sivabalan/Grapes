@@ -5,6 +5,8 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import org.apache.http.client.utils.URLEncodedUtils;
+
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
 import android.app.FragmentTransaction;
@@ -47,6 +49,7 @@ import com.dropbox.client2.session.AccessTokenPair;
 import com.dropbox.client2.session.AppKeyPair;
 import com.fruitmill.grapes.adapter.TabsPagerAdapter;
 import com.fruitmill.grapes.adapter.VideoItem;
+import com.fruitmill.grapes.utils.Utils;
 
 public class MainActivity extends FragmentActivity implements ActionBar.TabListener {
 	
@@ -62,8 +65,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private static final int ACTION_TAKE_VIDEO = 1;
 	private Grapes config;
 	private Uri mVideoUri;
-	private File capturedVideoFile;
-	@SuppressWarnings("unused")
+	private File capturedVideoFile, capturedThumbFile;
 	private boolean mLoggedIn;
 	DropboxAPI<AndroidAuthSession> mApi;
 	
@@ -316,9 +318,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		    fileName = fileName.substring(0, pos);
 		}
 		
-		File thumbFile = new File(Grapes.appThumbsDir, fileName+".png");
+		capturedThumbFile = new File(Grapes.appThumbsDir, fileName+".png");
 	    try {
-			FileOutputStream fOut = new FileOutputStream(thumbFile);
+			FileOutputStream fOut = new FileOutputStream(capturedThumbFile);
 
 			tempThumbnail.compress(Bitmap.CompressFormat.PNG, 85, fOut);
 			fOut.flush();
@@ -330,57 +332,82 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		}
 		
 		sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(capturedVideoFile)));
-		sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(thumbFile)));
+		sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(capturedThumbFile)));
 		
 		ContentValues values = new ContentValues(2);
 		values.put(MediaStore.Video.VideoColumns.LATITUDE, location.getLatitude());
 		values.put(MediaStore.Video.VideoColumns.LONGITUDE, location.getLongitude());
 		
-		geoLocUpdate(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values, MediaStore.Video.VideoColumns.DATA + " LIKE ?", new String[] { capturedVideoFile.getAbsolutePath() });
+		
+		
+		geoLocUpdate(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, 
+					values, 
+					MediaStore.Video.VideoColumns.DATA + " LIKE ?", new String[] { capturedVideoFile.getAbsolutePath() }, 
+					capturedVideoFile.getAbsolutePath(), capturedThumbFile.getAbsolutePath());
 
 	}
 	
-	public void geoLocUpdate(Uri uri, ContentValues values, String where, String[] selectionArgs)
+	public void geoLocUpdate(Uri uri, ContentValues values, String where, String[] selectionArgs, String vFilePath, String tFilePath)
 	{
 		Bundle args = new Bundle();
 		args.putParcelable  ("URI", uri);
 		args.putParcelable  ("VALUES", values);
 		args.putString      ("WHERE", where);
 		args.putStringArray ("SELECTION_ARGS", selectionArgs);
-
+		args.putStringArray	("FILE_PATHS", new String[] { vFilePath, tFilePath });
+		
 		new AsyncUpdate().execute(args);
 		
 	}
 
-	final class AsyncUpdate extends AsyncTask< Bundle, Void, Integer>
+	final class AsyncUpdate extends AsyncTask<Bundle, Void, VideoItem>
 	{
 		@Override
-		protected Integer doInBackground(Bundle... params) {
+		protected VideoItem doInBackground(Bundle... params) {
 			Bundle args = params[0];
 			Uri             uri             = args.getParcelable("URI");
 			ContentValues   values          = args.getParcelable("VALUES");
 			String          where           = args.getString("WHERE");
 			String[]        selectionArgs   = args.getStringArray("SELECTION_ARGS");
-
+			String[]		fPaths			= args.getStringArray("FILE_PATHS");
+			
 			int rowsUpdated = 0;
 			while (rowsUpdated != 1)
 			{
 				rowsUpdated = getContentResolver().update(uri, values, where, selectionArgs);
 			}
 			
-			return rowsUpdated;
+			VideoItem tempVideoItem = new VideoItem();
+			tempVideoItem.setVideoPath(fPaths[0]);
+			tempVideoItem.setThumbPath(fPaths[1]);
+			tempVideoItem.setvLat(values.getAsDouble(MediaStore.Video.VideoColumns.LATITUDE));
+			tempVideoItem.setvLon(values.getAsDouble(MediaStore.Video.VideoColumns.LONGITUDE));
+			
+			return tempVideoItem;
 		}
 
 		@Override
-		protected void onPostExecute(Integer result)
+		protected void onPostExecute(VideoItem vItem)
 		{
-			if (result == 1) {
-				Toast.makeText(MainActivity.this, "Video saved @ "+location.getLatitude()+ " : " +location.getLongitude(), Toast.LENGTH_SHORT).show();
+			
+			vItem.setVideoURI(Uri.parse(DropBox.tryUploadSingleFile(vItem.getVideoPath(), mLoggedIn, mApi)));
+			
+			try {
+				vItem.setThumbBase64(Utils.imageFileToString(vItem.getThumbPath()));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			else {
-				// TODO: Ask user to choose location on a map perhaps?
-				Log.v("hi",capturedVideoFile.getAbsolutePath());
-			}
+			
+			updateGrapesServer(vItem);
+			
+			Toast.makeText(MainActivity.this, "Video saved @ "+location.getLatitude()+ " : " +location.getLongitude(), Toast.LENGTH_SHORT).show();
+			
+		}
+		
+		private void updateGrapesServer(VideoItem vItem)
+		{
+			// Create GET request here :P (should be ideally POST)
 		}
 	}
 	
@@ -465,10 +492,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		
 	}
 	
-	/**
-=======
     /**
->>>>>>> 8fe43c279347b5ba100526d75b07d19f53d9e72e
      * Shows keeping the access keys returned from Trusted Authenticator in a local
      * store, rather than storing user name & password, and re-authenticating each
      * time (which is not to be done, ever).
@@ -507,7 +531,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         
     }
 
-    @SuppressWarnings("unused")
 	private void clearKeys() {
         SharedPreferences prefs = getSharedPreferences(DropBox.ACCOUNT_PREFS_NAME, 0);
         Editor edit = prefs.edit();

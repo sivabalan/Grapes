@@ -5,7 +5,7 @@ import java.io.File;
 import android.app.Application;
 
 public class Grapes extends Application {
-	public static File appRootDir,appVideoDir, appThumbsDir;
+	public static File appRootDir,appVideoDir,appThumbsDir;
 	public static String appVideoDirName = "videos";
 	public static String appThumbsDirName = "thumbs";
 	public int videoDuration = 60;
