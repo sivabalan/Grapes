@@ -12,6 +12,8 @@ public class VideoItem {
 	private double vLon;
 	private double vLat;
 	private Uri videoURI;
+	private int rating;
+	private double disFromCurrentLocation;
 	
 	public VideoItem() {
 		super();
@@ -72,6 +74,22 @@ public class VideoItem {
 
 	public void setThumbPath(String thumbPath) {
 		this.thumbPath = thumbPath;
+	}
+
+	public int getRating() {
+		return rating;
+	}
+
+	public void setRating(int rating) {
+		this.rating = rating;
+	}
+
+	public double getDisFromCurrentLocation() {
+		return disFromCurrentLocation;
+	}
+
+	public void setDisFromCurrentLocation(double disFromCurrentLocation) {
+		this.disFromCurrentLocation = disFromCurrentLocation;
 	}
 	
 	

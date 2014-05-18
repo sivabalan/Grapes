@@ -39,6 +39,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.MediaStore.Images.Thumbnails;
 import android.provider.Settings;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
@@ -77,6 +78,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private File capturedVideoFile, capturedThumbFile;
 	private boolean mLoggedIn;
 	DropboxAPI<AndroidAuthSession> mApi;
+	public static String[] remoteVideoList;
 	
 	private LocationManager locationManager;
 	private Criteria criteria;
@@ -182,12 +184,12 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			startActivity(intent);
 		}
 		// location updates: at least 1 meter and 200millsecs change
-		locationManager.requestLocationUpdates(provider, config.getLocationUpdateInterval(), 1, locationListener);
+		locationManager.requestLocationUpdates(provider, Grapes.locationUpdateInterval, 1, locationListener);
 		
 		
     }
 
-    private class MyLocationListener implements LocationListener {
+    private class MyLocationListener extends FragmentActivity implements LocationListener  {
 
     	@Override
     	public void onLocationChanged(Location loc) {
@@ -197,6 +199,16 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
     		location = loc;
 
+    		Fragment feeds = getSupportFragmentManager().findFragmentById(R.id.feedListView);
+    		
+    		try {
+				((FeedFragment) feeds).fetchVideos();
+			} catch (NullPointerException e) {
+				// TODO Auto-generated catch block
+				Log.v("hi","bye");
+				e.printStackTrace();
+			}
+    		
     		Toast.makeText(getApplicationContext(),  "Location changed : "+op, Toast.LENGTH_SHORT).show();
     	}
 
@@ -417,7 +429,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		private void updateGrapesServer(VideoItem vItem)
 		{			
 			String url = Grapes.backendUrl;
-			List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(1);
+			List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
 			nameValuePairs.add(new BasicNameValuePair("action", "save"));
 			nameValuePairs.add(new BasicNameValuePair("thumbnail", vItem.getThumbBase64()));
 			nameValuePairs.add(new BasicNameValuePair("link", vItem.getVideoURI().toString()));
@@ -430,6 +442,15 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			HttpGet httpGet = new HttpGet(url + "?" + paramsString);
 			try {
 				HttpResponse response = httpClient.execute(httpGet);
+				Log.v("response1",response.toString());
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			httpGet = new HttpGet(url + "?" + paramsString);
+			try {
+				HttpResponse response = httpClient.execute(httpGet);
+				Log.v("response2",response.toString());
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

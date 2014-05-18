@@ -17,4 +17,10 @@ public class Utils {
     	
     	return Base64.encodeToString(b, Base64.DEFAULT);
     }
+    
+    public static Bitmap stringToImageFile(String b64ImageString) {
+    	byte[] decodedString = Base64.decode(b64ImageString, Base64.DEFAULT);
+    	Bitmap decodedImage = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
+    	return decodedImage; 
+    }
 }
