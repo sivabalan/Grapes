@@ -1,5 +1,7 @@
 package com.fruitmill.grapes.adapter;
 
+import java.util.HashMap;
+
 import com.fruitmill.grapes.FeedFragment;
 import com.fruitmill.grapes.MapFragment;
 import com.fruitmill.grapes.MyVideosFragment;
@@ -10,26 +12,34 @@ import android.support.v4.app.FragmentPagerAdapter;
 
 public class TabsPagerAdapter extends FragmentPagerAdapter {
 	
+	private HashMap<Integer,Fragment> fragmentTrackerMap;
+	
 	public TabsPagerAdapter(FragmentManager fm) {
 		super(fm);
+		fragmentTrackerMap = new HashMap<Integer,Fragment>();
 	}
 
 	@Override
 	public Fragment getItem(int index) {
-
+		
+		Fragment tempFragment = null; 
+		
 		switch (index) {
 		case 0:
 			// Feed fragment activity
-			return new FeedFragment();
+			tempFragment = new FeedFragment();
+			break;
 		case 1:
 			// Map fragment activity
-			return new MapFragment();
+			tempFragment = new MapFragment();
+			break;
 		case 2:
 			// My videos fragment activity
-			return new MyVideosFragment();
+			tempFragment = new MyVideosFragment();
+			break;
 		}
-
-		return null;
+		fragmentTrackerMap.put(index, tempFragment);
+		return tempFragment;
 	}
 
 	@Override
@@ -37,4 +47,9 @@ public class TabsPagerAdapter extends FragmentPagerAdapter {
 		// get item count - equal to number of tabs
 		return 3;
 	}
+	
+	public Fragment getFragment(int key) {
+		return fragmentTrackerMap.get(key);
+	}
+	
 }

@@ -41,7 +41,9 @@ import android.provider.MediaStore.Images.Thumbnails;
 import android.provider.Settings;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
+import android.text.Layout;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -60,6 +62,7 @@ import com.dropbox.client2.session.AppKeyPair;
 import com.fruitmill.grapes.adapter.TabsPagerAdapter;
 import com.fruitmill.grapes.adapter.VideoItem;
 import com.fruitmill.grapes.utils.Utils;
+import com.google.android.gms.maps.SupportMapFragment;
 
 public class MainActivity extends FragmentActivity implements ActionBar.TabListener {
 	
@@ -79,6 +82,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private boolean mLoggedIn;
 	DropboxAPI<AndroidAuthSession> mApi;
 	public static String[] remoteVideoList;
+	private Context mainApp;
 	
 	private LocationManager locationManager;
 	private Criteria criteria;
@@ -94,6 +98,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		
         setContentView(R.layout.activity_main);
         config = (Grapes)getApplication();
+        mainApp = getApplicationContext();
         
 //        String deviceId = Secure.getString(this.getContentResolver(),Secure.ANDROID_ID);
 //        Toast.makeText(this, deviceId, Toast.LENGTH_SHORT).show();
@@ -118,7 +123,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         viewPager = (ViewPager) findViewById(R.id.pager);
         actionBar = getActionBar();
         mAdapter = new TabsPagerAdapter(getSupportFragmentManager());
- 
         viewPager.setAdapter(mAdapter);
         //actionBar.setHomeButtonEnabled(false);
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);        
@@ -199,35 +203,35 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
     		location = loc;
 
-    		Fragment feeds = getSupportFragmentManager().findFragmentById(R.id.feedListView);
+//    		Fragment feeds = getSupportFragmentManager().findFragmentById(R.id.feedListView);
+//    		
+//    		try {
+//				((FeedFragment) feeds).fetchVideos();
+//			} catch (NullPointerException e) {
+//				// TODO Auto-generated catch block
+//				Log.v("hi","bye");
+//				e.printStackTrace();
+//			}
     		
-    		try {
-				((FeedFragment) feeds).fetchVideos();
-			} catch (NullPointerException e) {
-				// TODO Auto-generated catch block
-				Log.v("hi","bye");
-				e.printStackTrace();
-			}
-    		
-    		Toast.makeText(getApplicationContext(),  "Location changed : "+op, Toast.LENGTH_SHORT).show();
+    		Toast.makeText(mainApp,  "Location changed : "+op, Toast.LENGTH_SHORT).show();
     	}
 
     	@Override
     	public void onStatusChanged(String provider, int status, Bundle extras) {
-    		Toast.makeText(getApplicationContext(), provider + "'s status changed to "+status +"!",
+    		Toast.makeText(mainApp, provider + "'s status changed to "+status +"!",
     				Toast.LENGTH_SHORT).show();
     	}
 
     	@Override
     	public void onProviderEnabled(String provider) {
-    		Toast.makeText(getApplicationContext(), "Provider " + provider + " enabled!",
+    		Toast.makeText(mainApp, "Provider " + provider + " enabled!",
     				Toast.LENGTH_SHORT).show();
 
     	}
 
     	@Override
     	public void onProviderDisabled(String provider) {
-    		Toast.makeText(getApplicationContext(), "Provider " + provider + " disabled!",
+    		Toast.makeText(mainApp, "Provider " + provider + " disabled!",
     				Toast.LENGTH_SHORT).show();
     	}
     }
@@ -279,12 +283,31 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		SearchView searchView = (SearchView) searchItem.getActionView();
 		searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
 		
+		
 		searchView.setOnSearchClickListener(new OnClickListener() {
 			
 			@Override
 			public void onClick(View v) {
 				actionBar.setSelectedNavigationItem(1); // 1 - Map fragment
 				viewPager.setCurrentItem(actionBar.getSelectedNavigationIndex());
+				v.requestFocus();
+			}
+		});
+		
+		searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+			
+			@Override
+			public boolean onQueryTextSubmit(String query) {
+				TabsPagerAdapter adapter = ((TabsPagerAdapter)viewPager.getAdapter());
+				MapFragment fragment = (MapFragment)adapter.getFragment(1);
+				fragment.findPlaces(query);
+				return false;
+			}
+			
+			@Override
+			public boolean onQueryTextChange(String newText) {
+				// TODO Auto-generated method stub
+				return false;
 			}
 		});
 			
@@ -313,8 +336,10 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 				
 				return true;
 			case R.id.dropbox_login:
-				mApi.getSession().startOAuth2Authentication(MainActivity.this);
-			
+				if(!mApi.getSession().isLinked()) {
+					mApi.getSession().startOAuth2Authentication(MainActivity.this);
+				}
+				return true;
 			default:
 				return super.onOptionsItemSelected(item);
 		}
@@ -403,6 +428,23 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			tempVideoItem.setThumbPath(fPaths[1]);
 			tempVideoItem.setvLat(values.getAsDouble(MediaStore.Video.VideoColumns.LATITUDE));
 			tempVideoItem.setvLon(values.getAsDouble(MediaStore.Video.VideoColumns.LONGITUDE));
+			String dropBoxUrl = DropBox.tryUploadSingleFile(tempVideoItem.getVideoPath(), mLoggedIn, mApi);
+			if(dropBoxUrl != null)
+			{
+				tempVideoItem.setVideoURI(Uri.parse(dropBoxUrl));
+			}
+			else
+			{
+				return tempVideoItem;
+			}
+			try {
+				tempVideoItem.setThumbBase64(Utils.imageFileToString(tempVideoItem.getThumbPath()));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			updateGrapesServer(tempVideoItem);
 			
 			return tempVideoItem;
 		}
@@ -410,17 +452,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		@Override
 		protected void onPostExecute(VideoItem vItem)
 		{
-			
-			vItem.setVideoURI(Uri.parse(DropBox.tryUploadSingleFile(vItem.getVideoPath(), mLoggedIn, mApi)));
-			
-			try {
-				vItem.setThumbBase64(Utils.imageFileToString(vItem.getThumbPath()));
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			updateGrapesServer(vItem);
 			
 			Toast.makeText(MainActivity.this, "Video saved @ "+location.getLatitude()+ " : " +location.getLongitude(), Toast.LENGTH_SHORT).show();
 			
@@ -433,7 +464,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			nameValuePairs.add(new BasicNameValuePair("action", "save"));
 			nameValuePairs.add(new BasicNameValuePair("thumbnail", vItem.getThumbBase64()));
 			nameValuePairs.add(new BasicNameValuePair("link", vItem.getVideoURI().toString()));
-			nameValuePairs.add(new BasicNameValuePair("action", "save"));
 			nameValuePairs.add(new BasicNameValuePair("lat", Double.toString(vItem.getvLat())));
 			nameValuePairs.add(new BasicNameValuePair("lon", Double.toString(vItem.getvLon())));
 

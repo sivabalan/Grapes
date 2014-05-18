@@ -10,7 +10,7 @@ public class Grapes extends Application {
 	public static String appThumbsDirName = "thumbs";
 	public static int videoDuration = 60;
 	public static int locationUpdateInterval = 5000; // In milliseconds
-	public static int videoRadius = 3000; // In meters
+	public static int videoRadius = 3000; // In meters i think
 	public static int videoFetchCount = 10;
 	public static String backendUrl = "http://trellis.lordnahor.kd.io:4444/";
 	

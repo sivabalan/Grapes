@@ -45,7 +45,7 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 	private VideoView vpVideoView;
 	private FrameLayout vpVideoFrame;
 	private List<VideoItem> videoList;
-	private SwipeRefreshLayout swipeRefreshLayout;
+	private PullToRefresh swipeRefreshLayout;
 	private BaseAdapter feedListAdapter;
 	private View rootView;
 	private ListView videoListView;
@@ -62,6 +62,19 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 			"http://dl.dropboxusercontent.com/1/view/g8uicrz2jy9pmv6/grapes-public/1978224610",
 			"http://dl.dropboxusercontent.com/1/view/vkys6rlj7xjdfzl/grapes-public/133635181"
 	};
+	
+	private class PullToRefresh extends SwipeRefreshLayout {
+		public PullToRefresh(Context context) {
+			super(context);
+			// TODO Auto-generated constructor stub
+		}
+
+		@Override
+		public boolean canChildScrollUp()
+		{
+			return videoListView.getFirstVisiblePosition()!=-1;
+		}
+	}
 	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -91,7 +104,7 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 			}
 		});
 		
-		swipeRefreshLayout = new SwipeRefreshLayout(rootView.getContext());
+		swipeRefreshLayout = new PullToRefresh(rootView.getContext());
         swipeRefreshLayout.addView(rootView);
         swipeRefreshLayout.setColorScheme(android.R.color.holo_blue_light, 
         		android.R.color.holo_red_light, 
@@ -99,6 +112,7 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
         		android.R.color.holo_orange_light);
         swipeRefreshLayout.setOnRefreshListener(this);
 		
+        
 		videoList = new ArrayList<VideoItem>();
 		
 		feedListAdapter = new VideoListAdapter(videoList.size(), rootView.getContext(), videoList, rootView);
@@ -123,13 +137,17 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 				nameValuePairs.add(new BasicNameValuePair("lat", Double.toString(MainActivity.location.getLatitude())));
 				nameValuePairs.add(new BasicNameValuePair("lon", Double.toString(MainActivity.location.getLongitude())));
 				nameValuePairs.add(new BasicNameValuePair("vc", Integer.toString(Grapes.videoFetchCount)));
+//				nameValuePairs.add(new BasicNameValuePair("maxd", "3000000"));
+//				nameValuePairs.add(new BasicNameValuePair("lat", "1.0"));
+//				nameValuePairs.add(new BasicNameValuePair("lon", "1.0"));
 
 				HttpClient httpClient = new DefaultHttpClient();
 				String paramsString = URLEncodedUtils.format(nameValuePairs, "UTF-8");
 				HttpGet httpGet = new HttpGet(url + "?" + paramsString);
 				try {
 					HttpResponse response = httpClient.execute(httpGet);
-					Log.v("response_fetch1",response.toString());
+					String responseString1 = EntityUtils.toString(response.getEntity());
+					Log.v("response_fetch1",responseString1);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -137,17 +155,19 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 				httpGet = new HttpGet(url + "?" + paramsString);
 				try {
 					HttpResponse response = httpClient.execute(httpGet);
-					Log.v("response_fetch2",response.toString());
+					String responseString = EntityUtils.toString(response.getEntity());
+					Log.v("response_fetch2",responseString);
 					
 					try {
-						//JSONArray videoObjects = new JSONArray(EntityUtils.toString(response.getEntity()));
-						JSONArray videoObjects = new JSONArray("[{\"rating\": 0.0, \"distance\": 0.0, \"lon\": 1.0, \"link\": \"http://im.not.ready\", \"lat\": 1.0, \"thumbnail\": \""+Grapes.sampleImageB64+"\"}]");//, {"rating": 0.0, "distance": 142198.891532703, "lon": -0.0002, "link": "http://i.m.not.ready", "lat": 0.2, "thumbnail": "ABCDG"}, {"rating": 0.0, "distance": 142207.60692903, "lon": -0.0003, "link": "http://i.m.n.ot.ready", "lat": 0.2, "thumbnail": "ABCD"}, {"rating": 0.0, "distance": 156899.568281358, "lon": 0.0, "link": "http://im.ready", "lat": 0.0, "thumbnail": "ABCDEF"}]');
+						JSONArray videoObjects = new JSONArray(responseString);
+						//JSONArray videoObjects = new JSONArray("[{\"rating\": 0.0, \"distance\": 0.0, \"lon\": 1.0, \"link\": \"http://im.not.ready\", \"lat\": 1.0, \"thumbnail\": \""+Grapes.sampleImageB64+"\"}]");//, {"rating": 0.0, "distance": 142198.891532703, "lon": -0.0002, "link": "http://i.m.not.ready", "lat": 0.2, "thumbnail": "ABCDG"}, {"rating": 0.0, "distance": 142207.60692903, "lon": -0.0003, "link": "http://i.m.n.ot.ready", "lat": 0.2, "thumbnail": "ABCD"}, {"rating": 0.0, "distance": 156899.568281358, "lon": 0.0, "link": "http://im.ready", "lat": 0.0, "thumbnail": "ABCDEF"}]');
 						JSONObject jsonVideoItem = new JSONObject();
-						VideoItem vItem = new VideoItem();
+						VideoItem vItem;
 						videoList = new ArrayList<VideoItem>();
 						for(int i=0; i<videoObjects.length(); i++)
 						{
 							jsonVideoItem = videoObjects.getJSONObject(i);
+							vItem = new VideoItem();
 							vItem.setVideoURI(Uri.parse(jsonVideoItem.getString("link")));
 							vItem.setRating(jsonVideoItem.getInt("rating"));
 							vItem.setvLat(jsonVideoItem.getDouble("lat"));
