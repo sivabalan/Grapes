@@ -4,8 +4,17 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
@@ -406,8 +415,25 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		}
 		
 		private void updateGrapesServer(VideoItem vItem)
-		{
-			// Create GET request here :P (should be ideally POST)
+		{			
+			String url = Grapes.backendUrl;
+			List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(1);
+			nameValuePairs.add(new BasicNameValuePair("action", "save"));
+			nameValuePairs.add(new BasicNameValuePair("thumbnail", vItem.getThumbBase64()));
+			nameValuePairs.add(new BasicNameValuePair("link", vItem.getVideoURI().toString()));
+			nameValuePairs.add(new BasicNameValuePair("action", "save"));
+			nameValuePairs.add(new BasicNameValuePair("lat", Double.toString(vItem.getvLat())));
+			nameValuePairs.add(new BasicNameValuePair("lon", Double.toString(vItem.getvLon())));
+
+			HttpClient httpClient = new DefaultHttpClient();
+			String paramsString = URLEncodedUtils.format(nameValuePairs, "UTF-8");
+			HttpGet httpGet = new HttpGet(url + "?" + paramsString);
+			try {
+				HttpResponse response = httpClient.execute(httpGet);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 	

@@ -10,6 +10,7 @@ public class Grapes extends Application {
 	public static String appThumbsDirName = "thumbs";
 	public int videoDuration = 60;
 	public int locationUpdateInterval = 5000; // In milliseconds
+	public static String backendUrl = "http://trellis.lordnahor.kd.io:4444/";
 
 	public int getVideoDuration() {
 		return videoDuration;
