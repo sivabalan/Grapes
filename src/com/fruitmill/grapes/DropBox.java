@@ -99,12 +99,20 @@ public class DropBox {
 						}
 						
 						StringBuilder sb = new StringBuilder();
+						String thumbName = "";
 						int rows = videoCursor.getCount();
 						for (int i =0 ;i< rows; i++){
 					    	int videoColumnIndex = videoCursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA);
 						    videoCursor.moveToPosition(i);
 					       	String videoFilePath = videoCursor.getString(videoColumnIndex);
 					       	String shareLink = tryUploadSingleFile(videoFilePath, loggedIn, mApi);
+					       	
+					       	thumbName = videoFilePath;
+							int pos1 = thumbName.lastIndexOf(File.separator);
+							int pos2 = thumbName.lastIndexOf(".");
+							if (pos2 > 0) {
+								thumbName = thumbName.substring(pos1, pos2);
+							}
 					       	
 					       	if (shareLink != null){
 					       		sb.append(shareLink + "\n");
@@ -115,8 +123,9 @@ public class DropBox {
 					       		video.setVideoURI(Uri.parse(shareLink));
 					       		video.setvLat(videoCursor.getDouble(latColumnIndex));
 					       		video.setvLon(videoCursor.getDouble(longColumnIndex));
+					       		video.setThumbPath(Grapes.appThumbsDir.getAbsolutePath()+File.separator+thumbName+".png");
 					       		videoCursor.getDouble(latColumnIndex);
-							    MainActivity.sendShareToServer(video);
+							    MainActivity.updateGrapesServer(video);
 					       	}
 					    }
 						

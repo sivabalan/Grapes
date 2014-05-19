@@ -31,6 +31,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
+import android.widget.AbsListView.OnScrollListener;
 import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
 import android.widget.ListView;
@@ -68,11 +70,11 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 			super(context);
 			// TODO Auto-generated constructor stub
 		}
-
+		
 		@Override
 		public boolean canChildScrollUp()
 		{
-			return videoListView.getFirstVisiblePosition()!=-1;
+			return videoListView.getFirstVisiblePosition() != 0;
 		}
 	}
 	
@@ -118,6 +120,22 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 		feedListAdapter = new VideoListAdapter(videoList.size(), rootView.getContext(), videoList, rootView);
 
 		videoListView = (ListView) rootView.findViewById(R.id.feedListView);
+		
+		videoListView.setOnScrollListener(new OnScrollListener() {
+			
+			@Override
+			public void onScrollStateChanged(AbsListView view, int scrollState) {
+				// TODO Auto-generated method stub
+				Log.v("vscroll_pos",Integer.toString(videoListView.getFirstVisiblePosition()));
+			}
+			
+			@Override
+			public void onScroll(AbsListView view, int firstVisibleItem,
+					int visibleItemCount, int totalItemCount) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
         
         videoListView.setAdapter(feedListAdapter);
         
@@ -185,6 +203,8 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
+				
+				
 				
 				getActivity().runOnUiThread(new Runnable() {
 

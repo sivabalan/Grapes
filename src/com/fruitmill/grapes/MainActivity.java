@@ -336,9 +336,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 				
 				return true;
 			case R.id.dropbox_login:
-				if(!mApi.getSession().isLinked()) {
+				//if(!mApi.getSession().isLinked()) {
 					mApi.getSession().startOAuth2Authentication(MainActivity.this);
-				}
+				//}
 				return true;
 			default:
 				return super.onOptionsItemSelected(item);
@@ -437,12 +437,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			{
 				return tempVideoItem;
 			}
-			try {
-				tempVideoItem.setThumbBase64(Utils.imageFileToString(tempVideoItem.getThumbPath()));
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 			
 			updateGrapesServer(tempVideoItem);
 			
@@ -457,34 +451,42 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			
 		}
 		
-		private void updateGrapesServer(VideoItem vItem)
-		{			
-			String url = Grapes.backendUrl;
-			List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
-			nameValuePairs.add(new BasicNameValuePair("action", "save"));
-			nameValuePairs.add(new BasicNameValuePair("thumbnail", vItem.getThumbBase64()));
-			nameValuePairs.add(new BasicNameValuePair("link", vItem.getVideoURI().toString()));
-			nameValuePairs.add(new BasicNameValuePair("lat", Double.toString(vItem.getvLat())));
-			nameValuePairs.add(new BasicNameValuePair("lon", Double.toString(vItem.getvLon())));
+	}
+	
+	public static void updateGrapesServer(VideoItem vItem)
+	{			
+		try {
+			vItem.setThumbBase64(Utils.imageFileToString(vItem.getThumbPath()));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		String url = Grapes.backendUrl;
+		List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
+		nameValuePairs.add(new BasicNameValuePair("action", "save"));
+		nameValuePairs.add(new BasicNameValuePair("thumbnail", vItem.getThumbBase64()));
+		nameValuePairs.add(new BasicNameValuePair("link", vItem.getVideoURI().toString()));
+		nameValuePairs.add(new BasicNameValuePair("lat", Double.toString(vItem.getvLat())));
+		nameValuePairs.add(new BasicNameValuePair("lon", Double.toString(vItem.getvLon())));
 
-			HttpClient httpClient = new DefaultHttpClient();
-			String paramsString = URLEncodedUtils.format(nameValuePairs, "UTF-8");
-			HttpGet httpGet = new HttpGet(url + "?" + paramsString);
-			try {
-				HttpResponse response = httpClient.execute(httpGet);
-				Log.v("response1",response.toString());
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			httpGet = new HttpGet(url + "?" + paramsString);
-			try {
-				HttpResponse response = httpClient.execute(httpGet);
-				Log.v("response2",response.toString());
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		HttpClient httpClient = new DefaultHttpClient();
+		String paramsString = URLEncodedUtils.format(nameValuePairs, "UTF-8");
+		HttpGet httpGet = new HttpGet(url + "?" + paramsString);
+		try {
+			HttpResponse response = httpClient.execute(httpGet);
+			Log.v("response1",response.toString());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		httpGet = new HttpGet(url + "?" + paramsString);
+		try {
+			HttpResponse response = httpClient.execute(httpGet);
+			Log.v("response2",response.toString());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 	
@@ -564,10 +566,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         Toast error = Toast.makeText(this, msg, Toast.LENGTH_LONG);
         error.show();
     }
-
-	public static void sendShareToServer(VideoItem video){
-		
-	}
 	
     /**
      * Shows keeping the access keys returned from Trusted Authenticator in a local
