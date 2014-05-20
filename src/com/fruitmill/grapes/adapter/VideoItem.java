@@ -5,14 +5,14 @@ import android.net.Uri;
 
 public class VideoItem {
 	
-	private Bitmap vThumbnail;
-	private String videoPath;
-	private String thumbPath;
-	private String thumbBase64;
-	private double vLon;
-	private double vLat;
+	private Bitmap vThumbnail = null;
+	private String videoPath = "";
+	private String thumbPath = "";
+	private String thumbBase64 = "";
+	private double vLon = 0.0;
+	private double vLat = 0.0;
 	private Uri videoURI;
-	private int rating;
+	private int rating = 0;
 	private double disFromCurrentLocation;
 	
 	public VideoItem() {

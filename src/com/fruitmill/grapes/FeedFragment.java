@@ -107,11 +107,9 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 		});
 		
 		swipeRefreshLayout = new PullToRefresh(rootView.getContext());
+		swipeRefreshLayout.setBackgroundResource(R.color.dark_gray);
         swipeRefreshLayout.addView(rootView);
-        swipeRefreshLayout.setColorScheme(android.R.color.holo_blue_light, 
-        		android.R.color.holo_red_light, 
-        		android.R.color.holo_green_light, 
-        		android.R.color.holo_orange_light);
+        swipeRefreshLayout.setColorScheme(R.color.purple1,R.color.purple2,R.color.purple3,R.color.purple4);
         swipeRefreshLayout.setOnRefreshListener(this);
 		
         
@@ -121,21 +119,21 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 
 		videoListView = (ListView) rootView.findViewById(R.id.feedListView);
 		
-		videoListView.setOnScrollListener(new OnScrollListener() {
-			
-			@Override
-			public void onScrollStateChanged(AbsListView view, int scrollState) {
-				// TODO Auto-generated method stub
-				Log.v("vscroll_pos",Integer.toString(videoListView.getFirstVisiblePosition()));
-			}
-			
-			@Override
-			public void onScroll(AbsListView view, int firstVisibleItem,
-					int visibleItemCount, int totalItemCount) {
-				// TODO Auto-generated method stub
-				
-			}
-		});
+//		videoListView.setOnScrollListener(new OnScrollListener() {
+//			
+//			@Override
+//			public void onScrollStateChanged(AbsListView view, int scrollState) {
+//				// TODO Auto-generated method stub
+//				Log.v("vscroll_pos",Integer.toString(videoListView.getFirstVisiblePosition()));
+//			}
+//			
+//			@Override
+//			public void onScroll(AbsListView view, int firstVisibleItem,
+//					int visibleItemCount, int totalItemCount) {
+//				// TODO Auto-generated method stub
+//				
+//			}
+//		});
         
         videoListView.setAdapter(feedListAdapter);
         
@@ -161,16 +159,9 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 
 				HttpClient httpClient = new DefaultHttpClient();
 				String paramsString = URLEncodedUtils.format(nameValuePairs, "UTF-8");
-				HttpGet httpGet = new HttpGet(url + "?" + paramsString);
-				try {
-					HttpResponse response = httpClient.execute(httpGet);
-					String responseString1 = EntityUtils.toString(response.getEntity());
-					Log.v("response_fetch1",responseString1);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
 				
-				httpGet = new HttpGet(url + "?" + paramsString);
+				
+				HttpGet httpGet = new HttpGet(url + "?" + paramsString);
 				try {
 					HttpResponse response = httpClient.execute(httpGet);
 					String responseString = EntityUtils.toString(response.getEntity());

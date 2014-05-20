@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#C7FCFA"
+    android:clickable="true"
+    android:background="#202020"
     android:orientation="vertical" >
 
     <ListView
         android:id="@+id/myVideosListView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true" >
+        android:layout_height="match_parent">
 
     </ListView>
 
@@ -30,4 +30,4 @@
 		</VideoView>
 	</FrameLayout>
    	
-</RelativeLayout>
+</FrameLayout>

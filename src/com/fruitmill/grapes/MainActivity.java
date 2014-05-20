@@ -103,21 +103,23 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 //        String deviceId = Secure.getString(this.getContentResolver(),Secure.ANDROID_ID);
 //        Toast.makeText(this, deviceId, Toast.LENGTH_SHORT).show();
         
-        // Create app directory
-        if (!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
-            Log.d(getString(R.string.app_name), "Storage not mounted");
-	    } else {
-	        File directory = new File(Environment.getExternalStorageDirectory()+File.separator+getString(R.string.app_name)+File.separator+Grapes.appVideoDirName);
-	        directory.mkdirs();
-	        File thumbDir = new File(Environment.getExternalStorageDirectory()+File.separator+getString(R.string.app_name)+File.separator+Grapes.appThumbsDirName);
-	        thumbDir.mkdirs();
-	        if(directory.isDirectory() && thumbDir.isDirectory())
-	        {
-	        	Grapes.appThumbsDir = thumbDir;
-	        	Grapes.appVideoDir = directory;
-	        	Grapes.appRootDir = directory.getParentFile();
-	        }    	
-	    }
+        // Create app directories
+        File directory = new File(Environment.getExternalStorageDirectory()+File.separator+getString(R.string.app_name)+File.separator+Grapes.appVideoDirName);
+        directory.mkdirs();
+        File thumbDir = new File(Environment.getExternalStorageDirectory()+File.separator+getString(R.string.app_name)+File.separator+Grapes.appThumbsDirName);
+        thumbDir.mkdirs();
+        File cachedDirectory = new File(Environment.getExternalStorageDirectory()+File.separator+getString(R.string.app_name)+File.separator+Grapes.appCachedVideoDirName);
+        cachedDirectory.mkdirs();
+        File cachedThumbDir = new File(Environment.getExternalStorageDirectory()+File.separator+getString(R.string.app_name)+File.separator+Grapes.appCachedThumbsDirName);
+        cachedThumbDir.mkdirs();
+        if(directory.isDirectory() && thumbDir.isDirectory() && cachedDirectory.isDirectory() && cachedThumbDir.isDirectory())
+        {
+        	Grapes.appThumbsDir = thumbDir;
+        	Grapes.appVideoDir = directory;
+        	Grapes.appRootDir = directory.getParentFile();
+        	Grapes.appCachedThumbsDir = cachedThumbDir;
+        	Grapes.appCachedVideoDir = cachedDirectory;
+        }
         
         // Initialization
         viewPager = (ViewPager) findViewById(R.id.pager);
@@ -472,15 +474,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 		HttpClient httpClient = new DefaultHttpClient();
 		String paramsString = URLEncodedUtils.format(nameValuePairs, "UTF-8");
+		
 		HttpGet httpGet = new HttpGet(url + "?" + paramsString);
-		try {
-			HttpResponse response = httpClient.execute(httpGet);
-			Log.v("response1",response.toString());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		httpGet = new HttpGet(url + "?" + paramsString);
 		try {
 			HttpResponse response = httpClient.execute(httpGet);
 			Log.v("response2",response.toString());

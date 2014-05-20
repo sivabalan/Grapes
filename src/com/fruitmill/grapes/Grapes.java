@@ -5,7 +5,7 @@ import java.io.File;
 import android.app.Application;
 
 public class Grapes extends Application {
-	public static File appRootDir,appVideoDir,appThumbsDir;
+	public static File appRootDir,appVideoDir,appThumbsDir,appCachedVideoDir,appCachedThumbsDir;
 	public static String appVideoDirName = "captured_videos";
 	public static String appThumbsDirName = "captured_thumbs";
 	public static String appCachedVideoDirName = "cached_videos";
@@ -15,7 +15,7 @@ public class Grapes extends Application {
 	public static int videoRadius = 3000; // In meters i think
 	public static int videoFetchCount = 10;
 	//public static String backendUrl = "http://trellis.lordnahor.kd.io:4444/";
-	public static String backendUrl = "http://192.168.2.15:4444/";
+	public static String backendUrl = "http://169.234.3.190:4444/";
 	
 	public static String sampleImageB64 = "iVBORw0KGgoAAAANSUhEUgAAAPAAAAFACAIAAAANimYEAAAAA3NCSVQICAjb4U/gAAAgAElEQVR4\n" + 
 			"nOy9QYslSZYu9j1hAcfAA8whEq5DJtSFKuhIpkCZTC0qoRadMILpRouZQQu95gn0eqennfQTtHq8\n" + 

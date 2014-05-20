@@ -1,8 +1,11 @@
 package com.fruitmill.grapes.adapter;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,9 +27,11 @@ public class VideoListAdapter extends BaseAdapter {
 	
 	public VideoListAdapter(int count, Context vContext, List<VideoItem> videoList, View videoListView) {
 		super();
-		this.count = count;
+		//this.count = count;
+		this.count = count+1;
 		this.vContext = vContext;
 		this.videoListMap = videoList;
+		this.videoListMap.add(0,new VideoItem());
 		this.vpVideoView = (VideoView) videoListView.findViewById(R.id.vp_video_view);
 		this.vpVideoFrame = (FrameLayout) videoListView.findViewById(R.id.vp_video_frame);
 	}
@@ -49,9 +54,17 @@ public class VideoListAdapter extends BaseAdapter {
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
         View videoItemRow = convertView;
+        
+        LayoutInflater inflater = (LayoutInflater) vContext.getSystemService( Context.LAYOUT_INFLATER_SERVICE );
+
+        if(position == 0)
+        {
+        	videoItemRow = inflater.inflate(R.layout.list_video_item_empty, parent, false);
+        	return videoItemRow;
+        }
+        
         final int itemPosition = position;
         if (videoItemRow == null) {
-        	LayoutInflater inflater = (LayoutInflater) vContext.getSystemService( Context.LAYOUT_INFLATER_SERVICE );
         	videoItemRow = 	inflater.inflate(R.layout.list_video_item, parent, false);
         }
         
@@ -69,8 +82,16 @@ public class VideoListAdapter extends BaseAdapter {
 		});
         
         TextView thumbnailLabel = (TextView) videoItemRow.findViewById(R.id.vi_geo);
-        thumbnailLabel.setText(Double.toString(videoListMap.get(position).getvLat())+" : "+
-        		Double.toString(videoListMap.get(position).getvLon())+" : "+videoListMap.get(position).getVideoURI()); 
+        
+        try {
+        	VideoItem temp = videoListMap.get(position);
+			thumbnailLabel.setText(Double.toString(temp.getvLat())+" : "+
+					Double.toString(temp.getvLon())+" : "+temp.getVideoURI());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			Log.v("Error position",Integer.toString(position));
+			e.printStackTrace();
+		} 
         
 		return videoItemRow;
 	}

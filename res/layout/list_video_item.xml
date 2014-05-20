@@ -7,11 +7,10 @@
     <ImageView
         android:id="@+id/vi_thumbnail"
         android:layout_width="fill_parent"
-        android:layout_height="150dp"
-        android:layout_margin="25dp"
-        android:background="@drawable/border"
+        android:layout_height="200dp"
+        android:layout_marginBottom="4dp"
+        android:background="#000000"
         android:contentDescription="@string/video_thumbnail_desc"
-        android:padding="10dp"
         android:src="@drawable/ic_action_video" />
 
     <TextView
@@ -21,6 +20,6 @@
         android:layout_alignLeft="@+id/vi_thumbnail"
         android:layout_alignParentTop="true"
         android:layout_marginTop="7dp"
-        />
+        android:textColor="#E6E6E6" />
 
 </RelativeLayout>
