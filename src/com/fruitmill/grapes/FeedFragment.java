@@ -36,6 +36,7 @@ import android.widget.AbsListView.OnScrollListener;
 import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
 import android.widget.ListView;
+import android.widget.Toast;
 import android.widget.VideoView;
 
 import com.fruitmill.grapes.adapter.VideoItem;
@@ -193,6 +194,14 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 					
 				} catch (IOException e) {
 					e.printStackTrace();
+					getActivity().runOnUiThread(new Runnable() {
+						@Override
+						public void run() {
+							Toast.makeText(rootView.getContext(), "Error connecting to Grapes backend. Please try refreshing by swiping down.", Toast.LENGTH_LONG).show();
+							swipeRefreshLayout.setRefreshing(false);
+						}
+					});
+					return;
 				}
 				
 				
