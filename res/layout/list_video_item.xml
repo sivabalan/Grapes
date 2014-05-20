@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+    android:layout_height="wrap_content"
     android:clipToPadding="false" >
 
     <ImageView
@@ -14,11 +14,12 @@
         android:src="@drawable/ic_action_video" />
 
     <TextView
-        android:id="@+id/vi_geo"
+        android:id="@+id/vi_place"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignBottom="@id/vi_thumbnail"
         android:layout_alignLeft="@+id/vi_thumbnail"
-        android:layout_alignParentTop="true"
+        android:layout_alignParentBottom="false"
         android:layout_marginTop="7dp"
         android:textColor="#E6E6E6" />
 
