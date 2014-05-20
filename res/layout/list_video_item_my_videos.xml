@@ -2,8 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:clipToPadding="false" 
-    >
+    android:clipToPadding="false" >
 
     <ImageView
         android:id="@+id/vi_thumbnail"
@@ -34,36 +33,6 @@
             android:paddingRight="10dp"
             android:paddingTop="5dp"
             android:textColor="#E6E6E6" />
-
-        <ImageButton
-            android:id="@+id/vi_thumbs_up"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_alignParentTop="true"
-            android:layout_marginRight="9dp"
-            android:layout_toLeftOf="@+id/vi_thumbs_down"
-            android:src="@drawable/ic_action_good" 
-            android:background="@drawable/round_button" />
-
-        <ImageButton
-            android:id="@+id/vi_thumbs_down"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentTop="true"
-            android:layout_marginRight="13dp"
-            android:src="@drawable/ic_action_bad" 
-            android:background="@drawable/round_button" />
-
-        <ImageButton
-            android:id="@+id/vi_download"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_alignParentTop="true"
-            android:layout_marginRight="11dp"
-            android:layout_toLeftOf="@+id/vi_thumbs_up"
-            android:src="@drawable/ic_action_download" 
-            android:background="@drawable/round_button" />
 
     </RelativeLayout>
 

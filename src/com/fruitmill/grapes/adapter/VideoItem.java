@@ -11,9 +11,10 @@ public class VideoItem {
 	private String thumbBase64 = "";
 	private double vLon = 0.0;
 	private double vLat = 0.0;
-	private Uri videoURI;
+	private Uri videoURI = null;
 	private int rating = 0;
 	private double disFromCurrentLocation;
+	private String displayAddress = "";
 	
 	public VideoItem() {
 		super();
@@ -90,6 +91,14 @@ public class VideoItem {
 
 	public void setDisFromCurrentLocation(double disFromCurrentLocation) {
 		this.disFromCurrentLocation = disFromCurrentLocation;
+	}
+
+	public String getDisplayAddress() {
+		return displayAddress;
+	}
+
+	public void setDisplayAddress(String displayAddress) {
+		this.displayAddress = displayAddress;
 	}
 	
 	

@@ -4,12 +4,19 @@
     android:layout_height="match_parent"
     android:clickable="true"
     android:background="#202020"
-    android:orientation="vertical" >
+    android:orientation="vertical" 
+    android:animateLayoutChanges="true"
+    >
 
     <ListView
         android:id="@+id/feedListView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" >
+
+        <!--
+        android:animateLayoutChanges="true"
+    	android:layoutAnimation="@anim/layout_animation" -->
+
     </ListView>
 
     <FrameLayout

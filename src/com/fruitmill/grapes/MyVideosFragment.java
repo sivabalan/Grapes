@@ -27,6 +27,7 @@ import android.widget.VideoView;
 
 import com.fruitmill.grapes.adapter.VideoItem;
 import com.fruitmill.grapes.adapter.VideoListAdapter;
+import com.fruitmill.grapes.utils.Utils;
 
 public class MyVideosFragment extends Fragment implements OnRefreshListener {
 	
@@ -34,7 +35,6 @@ public class MyVideosFragment extends Fragment implements OnRefreshListener {
 	private FrameLayout vpVideoFrame;
 	private Cursor videoCursor;
 	private int videoColumnIndex;
-	private List<VideoItem> videoList;
 	private BaseAdapter myVideosListAdapter;
 	private ListView videoListView;
 	private PullToRefresh swipeRefreshLayout;
@@ -87,20 +87,22 @@ public class MyVideosFragment extends Fragment implements OnRefreshListener {
         swipeRefreshLayout.setColorScheme(R.color.purple1,R.color.purple2,R.color.purple3,R.color.purple4);
         swipeRefreshLayout.setOnRefreshListener(this);
 		
-		videoList = new ArrayList<VideoItem>();
-		
-		myVideosListAdapter = new VideoListAdapter(videoList.size(), rootView.getContext(), videoList, rootView);
-		
 		videoListView = (ListView) rootView.findViewById(R.id.myVideosListView);
         
-        videoListView.setAdapter(myVideosListAdapter);
-        
-        fetchLocalVideos(rootView.getContext());
+		if(MainActivity.feedVideoList == null)
+		{
+			fetchLocalVideos(rootView.getContext());
+		}
+		else
+		{
+			myVideosListAdapter = new VideoListAdapter(MainActivity.feedVideoList.size(), rootView.getContext(), MainActivity.feedVideoList, rootView, "feed");
+			videoListView.setAdapter(myVideosListAdapter);
+		}
         
 		return swipeRefreshLayout;
 	}
 
-	private void fetchLocalVideos(final Context vContext) {
+	public void fetchLocalVideos(final Context vContext) {
 		swipeRefreshLayout.setRefreshing(true);
 		
 		new Thread() {
@@ -123,7 +125,7 @@ public class MyVideosFragment extends Fragment implements OnRefreshListener {
 				int count = videoCursor.getCount();
 				VideoItem vItem;
 				String thumbName;
-				videoList = new ArrayList<VideoItem>();
+				MainActivity.myVideosList = new ArrayList<VideoItem>();
 				for(int i=0;i<count;i++)
 				{
 					vItem = new VideoItem();
@@ -148,8 +150,7 @@ public class MyVideosFragment extends Fragment implements OnRefreshListener {
 					videoColumnIndex = videoCursor.getColumnIndexOrThrow(MediaStore.Video.Media.LATITUDE);
 					videoCursor.moveToPosition(i);
 					vItem.setvLat(videoCursor.getDouble(videoColumnIndex));
-					videoList.add(vItem);
-					Log.v("vPath",videoList.get(i).getVideoPath());
+					MainActivity.myVideosList.add(vItem);
 				}
 
 				getActivity().runOnUiThread(new Runnable() {
@@ -157,7 +158,7 @@ public class MyVideosFragment extends Fragment implements OnRefreshListener {
 					@Override
 					public void run() {
 
-						myVideosListAdapter = new VideoListAdapter(videoList.size(), rootView.getContext(), videoList, rootView);
+						myVideosListAdapter = new VideoListAdapter(MainActivity.myVideosList.size(), rootView.getContext(), MainActivity.myVideosList, rootView, "my_videos");
 						videoListView.setAdapter(myVideosListAdapter);
 						swipeRefreshLayout.setRefreshing(false);
 

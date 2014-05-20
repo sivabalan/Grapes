@@ -11,5 +11,22 @@
           android:layout_width="match_parent"
           android:layout_height="match_parent"
           android:name="com.google.android.gms.maps.SupportMapFragment"/>
+    
+    <FrameLayout
+   	    android:id="@+id/vp_video_frame"
+   	    android:layout_width="fill_parent"
+   	    android:layout_height="fill_parent"
+   	    android:background="#000000"
+   	    android:visibility="invisible"
+   	    android:clickable="true" >
+
+		<!-- Video player -->
+		<VideoView android:id="@+id/vp_video_view"
+		    android:layout_width="fill_parent"
+		    android:layout_height="fill_parent"
+		    android:layout_gravity="center"
+		    android:clickable="true" >
+		</VideoView>
+	</FrameLayout>
 
 </RelativeLayout>

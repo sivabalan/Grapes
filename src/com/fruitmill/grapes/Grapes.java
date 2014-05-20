@@ -10,9 +10,11 @@ public class Grapes extends Application {
 	public static String appThumbsDirName = "captured_thumbs";
 	public static String appCachedVideoDirName = "cached_videos";
 	public static String appCachedThumbsDirName = "cached_thumbs";
+	public static int feedUpdateThresholdDistance = 50; // In meters 
+	public static int minMapDistBeforeFetchingMarkers = 1000; // In meters
 	public static int videoDuration = 60;
 	public static int locationUpdateInterval = 5000; // In milliseconds
-	public static int videoRadius = 3000; // In meters i think
+	public static int videoRadius = 3000; // In meters
 	public static int videoFetchCount = 10;
 	//public static String backendUrl = "http://trellis.lordnahor.kd.io:4444/";
 	public static String backendUrl = "http://192.168.0.14:4444/";

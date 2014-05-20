@@ -1,38 +1,23 @@
 package com.fruitmill.grapes;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import android.content.Context;
+import android.location.Location;
 import android.media.MediaPlayer;
-import android.media.ThumbnailUtils;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore.Video.Thumbnails;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v4.widget.SwipeRefreshLayout.OnRefreshListener;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
-import android.widget.AbsListView.OnScrollListener;
 import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
 import android.widget.ListView;
@@ -47,7 +32,6 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 
 	private VideoView vpVideoView;
 	private FrameLayout vpVideoFrame;
-	private List<VideoItem> videoList;
 	private PullToRefresh swipeRefreshLayout;
 	private BaseAdapter feedListAdapter;
 	private View rootView;
@@ -88,7 +72,7 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 		vpVideoView = (VideoView) rootView.findViewById(R.id.vp_video_view);
 		vpVideoFrame = (FrameLayout) rootView.findViewById(R.id.vp_video_frame);
 		vpVideoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-			
+
 			@Override
 			public void onCompletion(MediaPlayer mp) {
 				vpVideoFrame.setVisibility(View.INVISIBLE);
@@ -112,88 +96,41 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
         swipeRefreshLayout.addView(rootView);
         swipeRefreshLayout.setColorScheme(R.color.purple1,R.color.purple2,R.color.purple3,R.color.purple4);
         swipeRefreshLayout.setOnRefreshListener(this);
-		
-        
-		videoList = new ArrayList<VideoItem>();
-		
-		feedListAdapter = new VideoListAdapter(videoList.size(), rootView.getContext(), videoList, rootView);
 
 		videoListView = (ListView) rootView.findViewById(R.id.feedListView);
 		
-//		videoListView.setOnScrollListener(new OnScrollListener() {
-//			
-//			@Override
-//			public void onScrollStateChanged(AbsListView view, int scrollState) {
-//				// TODO Auto-generated method stub
-//				Log.v("vscroll_pos",Integer.toString(videoListView.getFirstVisiblePosition()));
-//			}
-//			
-//			@Override
-//			public void onScroll(AbsListView view, int firstVisibleItem,
-//					int visibleItemCount, int totalItemCount) {
-//				// TODO Auto-generated method stub
-//				
-//			}
-//		});
-        
-        videoListView.setAdapter(feedListAdapter);
-        
-		fetchVideos();
+		if(MainActivity.feedVideoList == null || Utils.isFeedUpdateNecessary())
+		{
+			fetchVideos();
+		}
+		else
+		{
+			feedListAdapter = new VideoListAdapter(MainActivity.feedVideoList.size(), rootView.getContext(), MainActivity.feedVideoList, rootView, "feed");
+			videoListView.setAdapter(feedListAdapter);
+		}
         
 		return swipeRefreshLayout;
 	}
 	
 	public void fetchVideos() {
+		
 		swipeRefreshLayout.setRefreshing(true);
+		MainActivity.prevLocation = new Location(MainActivity.location);
+		
 		new Thread() {
 			public void run() {
-				String url = Grapes.backendUrl;
+				
 				List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
 				nameValuePairs.add(new BasicNameValuePair("action", "query"));
 				nameValuePairs.add(new BasicNameValuePair("maxd", Integer.toString(Grapes.videoRadius)));
 				nameValuePairs.add(new BasicNameValuePair("lat", Double.toString(MainActivity.location.getLatitude())));
 				nameValuePairs.add(new BasicNameValuePair("lon", Double.toString(MainActivity.location.getLongitude())));
 				nameValuePairs.add(new BasicNameValuePair("vc", Integer.toString(Grapes.videoFetchCount)));
-//				nameValuePairs.add(new BasicNameValuePair("maxd", "3000000"));
-//				nameValuePairs.add(new BasicNameValuePair("lat", "1.0"));
-//				nameValuePairs.add(new BasicNameValuePair("lon", "1.0"));
-
-				HttpClient httpClient = new DefaultHttpClient();
-				String paramsString = URLEncodedUtils.format(nameValuePairs, "UTF-8");
 				
+				MainActivity.feedVideoList = Utils.doGrapesQuery(nameValuePairs);
 				
-				HttpGet httpGet = new HttpGet(url + "?" + paramsString);
-				try {
-					HttpResponse response = httpClient.execute(httpGet);
-					String responseString = EntityUtils.toString(response.getEntity());
-					Log.v("response_fetch2",responseString);
-					
-					try {
-						JSONArray videoObjects = new JSONArray(responseString);
-						//JSONArray videoObjects = new JSONArray("[{\"rating\": 0.0, \"distance\": 0.0, \"lon\": 1.0, \"link\": \"http://im.not.ready\", \"lat\": 1.0, \"thumbnail\": \""+Grapes.sampleImageB64+"\"}]");//, {"rating": 0.0, "distance": 142198.891532703, "lon": -0.0002, "link": "http://i.m.not.ready", "lat": 0.2, "thumbnail": "ABCDG"}, {"rating": 0.0, "distance": 142207.60692903, "lon": -0.0003, "link": "http://i.m.n.ot.ready", "lat": 0.2, "thumbnail": "ABCD"}, {"rating": 0.0, "distance": 156899.568281358, "lon": 0.0, "link": "http://im.ready", "lat": 0.0, "thumbnail": "ABCDEF"}]');
-						JSONObject jsonVideoItem = new JSONObject();
-						VideoItem vItem;
-						videoList = new ArrayList<VideoItem>();
-						for(int i=0; i<videoObjects.length(); i++)
-						{
-							jsonVideoItem = videoObjects.getJSONObject(i);
-							vItem = new VideoItem();
-							vItem.setVideoURI(Uri.parse(jsonVideoItem.getString("link")));
-							vItem.setRating(jsonVideoItem.getInt("rating"));
-							vItem.setvLat(jsonVideoItem.getDouble("lat"));
-							vItem.setvLon(jsonVideoItem.getDouble("lon"));
-							vItem.setDisFromCurrentLocation(jsonVideoItem.getDouble("distance"));
-							vItem.setvThumbnail(Utils.stringToImageFile(jsonVideoItem.getString("thumbnail")));
-							
-							videoList.add(vItem);
-						}
-						
-					} catch (JSONException e) {
-						e.printStackTrace();
-					}
-					
-				} catch (IOException e) {
-					e.printStackTrace();
+				if(MainActivity.feedVideoList == null)
+				{
 					getActivity().runOnUiThread(new Runnable() {
 						@Override
 						public void run() {
@@ -201,17 +138,14 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 							swipeRefreshLayout.setRefreshing(false);
 						}
 					});
-					return;
 				}
-				
-				
 				
 				getActivity().runOnUiThread(new Runnable() {
 
 					@Override
 					public void run() {
 						
-						feedListAdapter = new VideoListAdapter(videoList.size(), rootView.getContext(), videoList, rootView);
+						feedListAdapter = new VideoListAdapter(MainActivity.feedVideoList.size(), rootView.getContext(), MainActivity.feedVideoList, rootView, "feed");
 						videoListView.setAdapter(feedListAdapter);
 						swipeRefreshLayout.setRefreshing(false);
 						

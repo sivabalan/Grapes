@@ -27,6 +27,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.location.Address;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -53,6 +54,7 @@ import android.view.View.OnClickListener;
 import android.widget.ImageView;
 import android.widget.SearchView;
 import android.widget.SearchView.OnCloseListener;
+import android.widget.SearchView.OnSuggestionListener;
 import android.widget.Toast;
 
 import com.dropbox.client2.DropboxAPI;
@@ -89,6 +91,10 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private String provider;
 	private MyLocationListener locationListener;
 	public static Location location;
+	public static Location prevLocation = null;
+	public static SearchView searchView;
+	public static List<VideoItem> feedVideoList = null;
+	public static List<VideoItem> myVideosList = null;
 	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -215,19 +221,17 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 //				e.printStackTrace();
 //			}
     		
-    		Toast.makeText(mainApp,  "Location changed : "+op, Toast.LENGTH_SHORT).show();
+    		//Toast.makeText(mainApp,  "Location changed : "+op, Toast.LENGTH_SHORT).show();
     	}
 
     	@Override
     	public void onStatusChanged(String provider, int status, Bundle extras) {
-    		Toast.makeText(mainApp, provider + "'s status changed to "+status +"!",
-    				Toast.LENGTH_SHORT).show();
+    		//Toast.makeText(mainApp, provider + "'s status changed to "+status +"!",Toast.LENGTH_SHORT).show();
     	}
 
     	@Override
     	public void onProviderEnabled(String provider) {
-    		Toast.makeText(mainApp, "Provider " + provider + " enabled!",
-    				Toast.LENGTH_SHORT).show();
+    		Toast.makeText(mainApp, "Provider " + provider + " enabled!",Toast.LENGTH_SHORT).show();
 
     	}
 
@@ -249,12 +253,22 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// on tab selected
 		// show respected fragment view
 		viewPager.setCurrentItem(tab.getPosition());
+		
+		
 		switch (tab.getPosition()) {
 		case FEED_VIEW:
 			
 			break;
 		case MAP_VIEW:
-			
+			MapFragment mapFragment = (MapFragment)mAdapter.getFragment(MAP_VIEW);
+			if(feedVideoList == null)
+			{
+				mapFragment.showAllVideosOnMapView();
+			}
+			else
+			{
+				mapFragment.renderGrapesMarkers(feedVideoList.subList(1, feedVideoList.size()));
+			}
 			break;
 		case MY_VIDEOS_VIEW:
 			
@@ -282,7 +296,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		
 		// Associate searchable configuration with the SearchView
 		SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
-		SearchView searchView = (SearchView) searchItem.getActionView();
+		searchView = (SearchView) searchItem.getActionView();
 		searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
 		
 		
@@ -296,20 +310,26 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			}
 		});
 		
+		TabsPagerAdapter adapter = ((TabsPagerAdapter)viewPager.getAdapter());
+		final MapFragment mapFragment = (MapFragment)adapter.getFragment(1);
+		
 		searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
 			
 			@Override
 			public boolean onQueryTextSubmit(String query) {
-				TabsPagerAdapter adapter = ((TabsPagerAdapter)viewPager.getAdapter());
-				MapFragment fragment = (MapFragment)adapter.getFragment(1);
-				fragment.findPlaces(query);
-				return false;
+				
+				mapFragment.findPlaces(query);
+				return true;
 			}
 			
 			@Override
 			public boolean onQueryTextChange(String newText) {
-				// TODO Auto-generated method stub
-				return false;
+				
+				if(newText.length() > 3)
+				{
+					mapFragment.loadSuggestions(newText);
+				}
+				return true; 
 			}
 		});
 			
@@ -321,7 +341,40 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 				viewPager.setCurrentItem(actionBar.getSelectedNavigationIndex());
 				return false;
 			}
-		});	
+		});
+		
+		searchView.setOnSuggestionListener(new OnSuggestionListener() {
+			
+			@Override
+			public boolean onSuggestionSelect(int position) {
+				return true;
+			}
+			
+			@Override
+			public boolean onSuggestionClick(int position) {
+				Object[] addressInfo = getSuggestion(position);
+				searchView.setQuery((String)addressInfo[0], false);
+				Address address = new Address(null);
+				address.setLatitude((Double)addressInfo[1]);
+				address.setLongitude((Double)addressInfo[2]);
+				mapFragment.showNearbyVideosOnMap(address);
+				searchView.clearFocus();
+
+				return true; // replace default search manager behaviour
+			}
+			
+			private Object[] getSuggestion(int position) {
+				Cursor cursor = (Cursor) searchView.getSuggestionsAdapter().getItem(position);
+				String suggest1 = cursor.getString(cursor.getColumnIndex("address"));
+				Double lat = cursor.getDouble(cursor.getColumnIndex("latitude"));
+				Double lon = cursor.getDouble(cursor.getColumnIndex("longitude"));
+				Object[] temp = new Object[] { suggest1, lat, lon };
+				return temp;
+			}
+		});
+		
+
+		
 		
 		return super.onCreateOptionsMenu(menu);
 		//return true;
@@ -352,7 +405,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		capturedVideoFile = new File(Grapes.appVideoDir.getAbsolutePath(), System.currentTimeMillis()+".mp4");
 		takeVideoIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0);
 		takeVideoIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(capturedVideoFile));
-		takeVideoIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, config.videoDuration);
+		takeVideoIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, Grapes.videoDuration);
 		startActivityForResult(takeVideoIntent, ACTION_TAKE_VIDEO);
 	}
 	
@@ -448,7 +501,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		@Override
 		protected void onPostExecute(VideoItem vItem)
 		{
-			
+			MyVideosFragment myVideosFragment = (MyVideosFragment)mAdapter.getFragment(MY_VIDEOS_VIEW);
+			myVideosFragment.fetchLocalVideos(getApplicationContext());
 			Toast.makeText(MainActivity.this, "Video saved @ "+location.getLatitude()+ " : " +location.getLongitude(), Toast.LENGTH_SHORT).show();
 			
 		}
