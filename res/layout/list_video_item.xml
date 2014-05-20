@@ -13,52 +13,57 @@
         android:contentDescription="@string/video_thumbnail_desc"
         android:src="@drawable/ic_action_video" />
 
-    <LinearLayout
-        android:id="@+id/vi_placeLabel"
+    <RelativeLayout
+        android:id="@+id/vi_toolbar"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_alignBottom="@id/vi_thumbnail"
         android:layout_alignLeft="@+id/vi_thumbnail"
         android:layout_alignParentBottom="false"
-        android:background="#33D3D3D3" >
+        android:background="#88202020" >
 
         <TextView
             android:id="@+id/vi_place"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
             android:paddingBottom="5dp"
             android:paddingLeft="10dp"
             android:paddingRight="10dp"
             android:paddingTop="5dp"
-            android:text="Sample text"
             android:textColor="#E6E6E6" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/vi_placeLabel"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
-        android:layout_alignRight="@id/vi_thumbnail"
-        android:layout_alignTop="@id/vi_thumbnail"
-        android:gravity="center_vertical"
-        android:orientation="vertical" >
 
         <ImageButton
             android:id="@+id/vi_thumbs_up"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="10dp"
-            android:src="@drawable/ic_action_good" />
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentTop="true"
+            android:layout_marginRight="9dp"
+            android:layout_toLeftOf="@+id/vi_thumbs_down"
+            android:src="@drawable/ic_action_good" 
+            android:background="@drawable/round_button" />
 
         <ImageButton
             android:id="@+id/vi_thumbs_down"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/ic_action_bad" />
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginRight="13dp"
+            android:src="@drawable/ic_action_bad" 
+            android:background="@drawable/round_button" />
 
-    </LinearLayout>
+        <ImageButton
+            android:id="@+id/vi_download"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_alignParentTop="true"
+            android:layout_marginRight="11dp"
+            android:layout_toLeftOf="@+id/vi_thumbs_up"
+            android:src="@drawable/ic_action_download" 
+            android:background="@drawable/round_button" />
+
+    </RelativeLayout>
 
 </RelativeLayout>
