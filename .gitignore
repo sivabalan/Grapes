@@ -1,3 +1,5 @@
 gen/
 bin/*
 *.class
+
+!bin/Grapes.apk
