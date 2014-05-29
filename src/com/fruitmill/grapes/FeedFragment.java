@@ -1,7 +1,6 @@
 package com.fruitmill.grapes;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -26,10 +25,13 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
+import android.widget.AbsListView.OnScrollListener;
 import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 import android.widget.VideoView;
 
 import com.fruitmill.grapes.adapter.VideoItem;
@@ -107,6 +109,23 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 
 		videoListView = (ListView) rootView.findViewById(R.id.feedListView);
 		
+		videoListView.setOnScrollListener(new OnScrollListener() {
+			
+			@Override
+			public void onScrollStateChanged(AbsListView view, int scrollState) {
+				// TODO Auto-generated method stub
+				boolean isCameraIconVisible = scrollState == SCROLL_STATE_IDLE ? true : false;
+				Utils.toggleCameraIcon(isCameraIconVisible);
+			}
+			
+			@Override
+			public void onScroll(AbsListView view, int firstVisibleItem,
+					int visibleItemCount, int totalItemCount) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
 		if(MainActivity.feedVideoList == null || Utils.isFeedUpdateNecessary())
 		{
 			fetchVideos();
@@ -121,7 +140,7 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 	}
 	
 	public void fetchVideos() {
-		
+		Utils.setAppStatusLabel(R.string.picking_grapes);
 		swipeRefreshLayout.setRefreshing(true);
 		if(MainActivity.location == null)
 		{
@@ -163,6 +182,7 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 						
 						feedListAdapter = new VideoListAdapter(MainActivity.feedVideoList.size(), rootView.getContext(), MainActivity.feedVideoList, rootView, "feed");
 						videoListView.setAdapter(feedListAdapter);
+						Utils.setAppStatusLabel(R.string.empty);
 						swipeRefreshLayout.setRefreshing(false);
 						
 					}

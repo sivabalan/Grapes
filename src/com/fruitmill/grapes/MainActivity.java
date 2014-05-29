@@ -60,6 +60,7 @@ import android.widget.ImageView;
 import android.widget.SearchView;
 import android.widget.SearchView.OnCloseListener;
 import android.widget.SearchView.OnSuggestionListener;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.dropbox.client2.DropboxAPI;
@@ -94,6 +95,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private Criteria criteria;
 	private String provider;
 	private MyLocationListener locationListener;
+	
+	public static ImageView cameraIcon;
+	public static TextView appStatus;
 	public static Location location;
 	public static Location prevLocation = null;
 	public static SearchView searchView;
@@ -167,7 +171,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		});
 		
 		// Open camera intent when camera icon is pressed
-		ImageView cameraIcon = (ImageView) findViewById(R.id.cameraView);
+		cameraIcon = (ImageView) findViewById(R.id.cameraView);
 		
 		cameraIcon.setOnClickListener(new View.OnClickListener() {
 		    @Override
@@ -175,6 +179,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		        dispatchTakeVideoIntent();
 		    }
 		});
+		
+		appStatus = (TextView) findViewById(R.id.appStatusLabel);
 		
 		// Get the location manager
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -261,7 +267,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 //				e.printStackTrace();
 //			}
     		
-    		Toast.makeText(mainApp,  "Location changed : "+op, Toast.LENGTH_SHORT).show();
+    		//Toast.makeText(mainApp,  "Location changed : "+op, Toast.LENGTH_SHORT).show();
     	}
 
     	@Override
@@ -271,14 +277,13 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
     	@Override
     	public void onProviderEnabled(String provider) {
-    		Toast.makeText(mainApp, "Provider " + provider + " enabled!",Toast.LENGTH_SHORT).show();
+    		//Toast.makeText(mainApp, "Provider " + provider + " enabled!",Toast.LENGTH_SHORT).show();
 
     	}
 
     	@Override
     	public void onProviderDisabled(String provider) {
-    		Toast.makeText(mainApp, "Provider " + provider + " disabled!",
-    				Toast.LENGTH_SHORT).show();
+    		//Toast.makeText(mainApp, "Provider " + provider + " disabled!",Toast.LENGTH_SHORT).show();
     	}
     }
     

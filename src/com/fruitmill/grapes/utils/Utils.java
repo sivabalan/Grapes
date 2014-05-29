@@ -6,14 +6,11 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
@@ -21,12 +18,8 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.entity.AbstractHttpEntity;
-import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -46,6 +39,9 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
+import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageButton;
 
 import com.fruitmill.grapes.Grapes;
@@ -305,5 +301,18 @@ public class Utils {
 			
 		}
 		
+	}
+	
+	public static void toggleCameraIcon(boolean toShow) {
+		int visibility = toShow ? View.VISIBLE : View.INVISIBLE;
+//		Animation animFadeOut = AnimationUtils.loadAnimation(Grapes.appContext, android.R.anim.fade_out);
+//		Animation animFadeIn = AnimationUtils.loadAnimation(Grapes.appContext, android.R.anim.fade_in);
+//		Animation toPlay = toShow ? animFadeIn : animFadeOut;
+//		MainActivity.cameraIcon.setAnimation(toPlay);
+		MainActivity.cameraIcon.setVisibility(visibility);
+	}
+	
+	public static void setAppStatusLabel(int resId) {
+		MainActivity.appStatus.setText(resId);
 	}
 }
