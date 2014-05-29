@@ -67,4 +67,15 @@
 
     </RelativeLayout>
 
+    <ImageButton
+        android:id="@+id/vi_report_video"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/round_button"
+        android:src="@drawable/ic_action_error" />
+
 </RelativeLayout>

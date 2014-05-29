@@ -16,8 +16,9 @@ public class VideoItem {
 	private double vLat = 0.0;
 	private Uri videoURI = null;
 	private int rating = 0;
-	private double disFromCurrentLocation;
+	private double disFromCurrentLocation = 0;
 	private String displayAddress = "";
+	private String videoID = "";
 	
 	public VideoItem() {
 		super();
@@ -105,6 +106,14 @@ public class VideoItem {
 
 	public void setDisplayAddress(String displayAddress) {
 		this.displayAddress = displayAddress;
+	}
+
+	public String getVideoID() {
+		return videoID;
+	}
+
+	public void setVideoID(String videoID) {
+		this.videoID = videoID;
 	}
 	
 	

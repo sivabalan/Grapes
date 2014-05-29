@@ -6,18 +6,27 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.entity.AbstractHttpEntity;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,6 +45,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Base64;
+import android.util.Log;
 import android.widget.ImageButton;
 
 import com.fruitmill.grapes.Grapes;
@@ -73,9 +83,14 @@ public class Utils {
         return true;
     }
     
+	public static List<NameValuePair> attachDeviceId(List<NameValuePair> params) {
+		params.add(new BasicNameValuePair("device_id", MainActivity.deviceId));
+		return params;
+	}
+	
     public static List<VideoItem> doGrapesQuery(List<NameValuePair> params) {
     	List<VideoItem> localVideoList = null;
-    	
+    	params = attachDeviceId(params);
     	String url = Grapes.backendUrl;
     	HttpClient httpClient = new DefaultHttpClient();
 		String paramsString = URLEncodedUtils.format(params, "UTF-8");
@@ -102,6 +117,8 @@ public class Utils {
 					vItem.setvLon(jsonVideoItem.getDouble("lon"));
 					vItem.setDisFromCurrentLocation(jsonVideoItem.getDouble("distance"));
 					vItem.setvThumbnail(Utils.stringToImageFile(jsonVideoItem.getString("thumbnail")));
+					//vItem.setVideoID(jsonVideoItem.getString("video_id"));
+					vItem.setDisplayAddress(jsonVideoItem.getString("address"));
 					
 					localVideoList.add(vItem);
 				}
@@ -119,6 +136,34 @@ public class Utils {
     	return localVideoList;
     }
     
+    public static void reportVideo(final VideoItem vItem) {
+    	Thread t = new Thread() {
+    		public void run() {
+
+    			String url = Grapes.backendUrl;
+    			List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
+    			nameValuePairs.add(new BasicNameValuePair("action", "report"));
+    			nameValuePairs.add(new BasicNameValuePair("video_id", vItem.getVideoID()));
+    			nameValuePairs = Utils.attachDeviceId(nameValuePairs);
+    			
+    			String paramsString = URLEncodedUtils.format(nameValuePairs, "UTF-8");
+    			
+    			HttpClient httpClient = new DefaultHttpClient();
+    			
+    			HttpPost httpPost = new HttpPost(url + "?" + paramsString);
+    			
+    			try {
+    				HttpResponse response = httpClient.execute(httpPost);
+    				Log.v("INFO: Report video",response.toString());
+    			} catch (IOException e) {
+    				// TODO Auto-generated catch block
+    				e.printStackTrace();
+    			}
+    		}
+    	};
+    	t.start();
+    	return;
+    }
     
     public static boolean saveVideoFromFeed(final VideoItem vItem, ImageButton vDown) {
     	vDown.setImageResource(R.id.progress_circular);

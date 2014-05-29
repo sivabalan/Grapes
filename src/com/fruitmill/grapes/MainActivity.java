@@ -4,16 +4,24 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.entity.AbstractHttpEntity;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.HTTP;
+import org.json.JSONObject;
 
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
@@ -91,7 +99,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	public static SearchView searchView;
 	public static List<VideoItem> feedVideoList = null;
 	public static List<VideoItem> myVideosList = null;
-	
+	public static String deviceId = ""; 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -103,8 +111,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         mainApp = getApplicationContext();
         Grapes.appContext = getApplicationContext();
         
-        String deviceId = Secure.getString(this.getContentResolver(),Secure.ANDROID_ID);
-        Toast.makeText(this, deviceId, Toast.LENGTH_SHORT).show();
+        deviceId = Secure.getString(this.getContentResolver(),Secure.ANDROID_ID);
+//        Toast.makeText(this, deviceId, Toast.LENGTH_SHORT).show();
         
         // Create app directories
         File directory = new File(Environment.getExternalStorageDirectory()+File.separator+getString(R.string.app_name)+File.separator+Grapes.appVideoDirName);
@@ -553,17 +561,36 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		String url = Grapes.backendUrl;
 		List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
 		nameValuePairs.add(new BasicNameValuePair("action", "save"));
-		nameValuePairs.add(new BasicNameValuePair("thumbnail", vItem.getThumbBase64()));
-		nameValuePairs.add(new BasicNameValuePair("link", vItem.getVideoURI().toString()));
+//		nameValuePairs.add(new BasicNameValuePair("thumbnail", vItem.getThumbBase64()));
+//		nameValuePairs.add(new BasicNameValuePair("link", vItem.getVideoURI().toString()));
 		nameValuePairs.add(new BasicNameValuePair("lat", Double.toString(vItem.getvLat())));
 		nameValuePairs.add(new BasicNameValuePair("lon", Double.toString(vItem.getvLon())));
-
-		HttpClient httpClient = new DefaultHttpClient();
+		nameValuePairs = Utils.attachDeviceId(nameValuePairs);
+		
 		String paramsString = URLEncodedUtils.format(nameValuePairs, "UTF-8");
 		
-		HttpGet httpGet = new HttpGet(url + "?" + paramsString);
+		Map<String, Object> jsonValues = new HashMap<String, Object>();
+	    jsonValues.put("thumbnail", vItem.getThumbBase64());
+	    jsonValues.put("link" , vItem.getVideoURI().toString());
+	    JSONObject json = new JSONObject(jsonValues);
+
+	    AbstractHttpEntity entity = null;
 		try {
-			HttpResponse response = httpClient.execute(httpGet);
+			entity = new ByteArrayEntity(json.toString().getBytes("UTF8"));
+		} catch (UnsupportedEncodingException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+	    entity.setContentType(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+	   
+	    
+		HttpClient httpClient = new DefaultHttpClient();
+		
+		HttpPost httpPost = new HttpPost(url + "?" + paramsString);
+		httpPost.setEntity(entity);
+		
+		try {
+			HttpResponse response = httpClient.execute(httpPost);
 			Log.v("response2",response.toString());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

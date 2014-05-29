@@ -86,6 +86,15 @@ public class VideoListAdapter extends BaseAdapter {
 						Utils.saveVideoFromFeed(cItem, vDownload);
 					}
 				});
+        		
+        		final ImageButton vReport = (ImageButton) videoItemRow.findViewById(R.id.vi_report_video);
+        		vReport.setOnClickListener(new OnClickListener() {
+					
+					@Override
+					public void onClick(View v) {
+						Utils.reportVideo(cItem);
+					}
+				});
         	}
         	else
         	{
@@ -109,8 +118,14 @@ public class VideoListAdapter extends BaseAdapter {
         
         
         TextView thumbnailLabel = (TextView) videoItemRow.findViewById(R.id.vi_place);
-        
-        new ReverseGeocoderTask().execute(vContext, thumbnailLabel, cItem.getvLat(), cItem.getvLon());
+        if(cItem.getDisplayAddress() == "")
+        {
+        	new ReverseGeocoderTask().execute(vContext, thumbnailLabel, cItem.getvLat(), cItem.getvLon());
+        }
+        else
+        {
+        	thumbnailLabel.setText(cItem.getDisplayAddress());
+        }
         
 		return videoItemRow;
 	}
