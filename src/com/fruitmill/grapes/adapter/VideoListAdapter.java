@@ -10,14 +10,17 @@ import android.location.Geocoder;
 import android.os.AsyncTask;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.VideoView;
 
 import com.fruitmill.grapes.R;
+import com.fruitmill.grapes.utils.Utils;
 
 public class VideoListAdapter extends BaseAdapter {
 	
@@ -59,6 +62,7 @@ public class VideoListAdapter extends BaseAdapter {
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
         View videoItemRow = convertView;
+        final VideoItem cItem = videoListMap.get(position);
         
         LayoutInflater inflater = (LayoutInflater) vContext.getSystemService( Context.LAYOUT_INFLATER_SERVICE );
 
@@ -73,6 +77,15 @@ public class VideoListAdapter extends BaseAdapter {
         	if(callingFragment == "feed")
         	{
         		videoItemRow = 	inflater.inflate(R.layout.list_video_item, parent, false);
+        		
+        		final ImageButton vDownload = (ImageButton) videoItemRow.findViewById(R.id.vi_download);
+        		vDownload.setOnClickListener(new OnClickListener() {
+					
+					@Override
+					public void onClick(View v) {
+						Utils.saveVideoFromFeed(cItem, vDownload);
+					}
+				});
         	}
         	else
         	{
@@ -93,9 +106,9 @@ public class VideoListAdapter extends BaseAdapter {
 			}
 		});
         
-        TextView thumbnailLabel = (TextView) videoItemRow.findViewById(R.id.vi_place);
         
-        VideoItem cItem = videoListMap.get(position);
+        
+        TextView thumbnailLabel = (TextView) videoItemRow.findViewById(R.id.vi_place);
         
         new ReverseGeocoderTask().execute(vContext, thumbnailLabel, cItem.getvLat(), cItem.getvLon());
         

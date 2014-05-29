@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:clickable="true"
@@ -8,6 +8,15 @@
     android:animateLayoutChanges="true"
     >
 
+    <TextView
+        android:id="@+id/listPlaceHolderLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:text="Picking grapes.. please wait."
+        android:textColor="#FFFFFF" />
+    
     <ListView
         android:id="@+id/feedListView"
         android:layout_width="match_parent"
@@ -38,4 +47,4 @@
         </VideoView>
     </FrameLayout>
 
-</FrameLayout>
+</RelativeLayout>

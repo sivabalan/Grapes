@@ -1,15 +1,23 @@
 package com.fruitmill.grapes;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 
 import android.content.Context;
+import android.database.Cursor;
+import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v4.widget.SwipeRefreshLayout.OnRefreshListener;
@@ -115,6 +123,12 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 	public void fetchVideos() {
 		
 		swipeRefreshLayout.setRefreshing(true);
+		if(MainActivity.location == null)
+		{
+			Toast.makeText(getActivity(), "Location can't be determined", Toast.LENGTH_SHORT).show();
+			return;
+		}
+		
 		MainActivity.prevLocation = new Location(MainActivity.location);
 		
 		new Thread() {
@@ -126,8 +140,9 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 				nameValuePairs.add(new BasicNameValuePair("lat", Double.toString(MainActivity.location.getLatitude())));
 				nameValuePairs.add(new BasicNameValuePair("lon", Double.toString(MainActivity.location.getLongitude())));
 				nameValuePairs.add(new BasicNameValuePair("vc", Integer.toString(Grapes.videoFetchCount)));
+			
+				MainActivity.feedVideoList = (Utils.isOnline(getActivity()))? Utils.doGrapesQuery(nameValuePairs) : fetchCachedVideos(getActivity());
 				
-				MainActivity.feedVideoList = Utils.doGrapesQuery(nameValuePairs);
 				
 				if(MainActivity.feedVideoList == null)
 				{
@@ -138,6 +153,7 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 							swipeRefreshLayout.setRefreshing(false);
 						}
 					});
+					return;
 				}
 				
 				getActivity().runOnUiThread(new Runnable() {
@@ -162,46 +178,49 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 	}
 	
 	
-	
-//	private List<VideoItem> fetchLocalVideos(Context vContext) {
-//		String selection = MediaStore.Video.Media.DATA +" like ?";
-//        String[] selectionArgs = new String[]{"%"+getString(R.string.app_name)+"%"+Grapes.appVideoDirName+"%"};
-//        String[] projection = new String[]{
-////        		MediaStore.Video.Media.SIZE,
-////        		MediaStore.Video.VideoColumns.DURATION,
-////        		MediaStore.Video.VideoColumns.DATE_TAKEN,
-////        		MediaStore.Video.VideoColumns.RESOLUTION,
-////        		MediaStore.Video.VideoColumns.DISPLAY_NAME,
-//        		MediaStore.Video.VideoColumns.DATA,
-//        		MediaStore.Video.VideoColumns._ID
-//		};
-//        videoCursor = vContext.getContentResolver().query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-//                projection, selection, selectionArgs, MediaStore.Video.Media.DATE_TAKEN + " DESC");
-//        int count = videoCursor.getCount();
-//        VideoItem vItem;
-//        String thumbName;
-//        List<VideoItem> localVideoList = new ArrayList<VideoItem>();
-//        for(int i=0;i<count;i++)
-//		{
-//			vItem = new VideoItem();
-//	        videoColumnIndex = videoCursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA);
-//	        videoCursor.moveToPosition(i);
-//			vItem.setVideoPath(videoCursor.getString(videoColumnIndex));
-//			
-//			thumbName = vItem.getVideoPath();
-//			int pos1 = thumbName.lastIndexOf(File.separator);
-//			int pos2 = thumbName.lastIndexOf(".");
-//			if (pos2 > 0) {
-//				thumbName = thumbName.substring(pos1, pos2);
-//			}
-//			
-//	        videoColumnIndex = videoCursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID);
-//	        videoCursor.moveToPosition(i);
-//	        vItem.setVideoURI(Uri.parse(MediaStore.Video.Media.EXTERNAL_CONTENT_URI.toString()+"/"+videoCursor.getString(videoColumnIndex)));
-//	        vItem.setvThumbnail(BitmapFactory.decodeFile(Grapes.appThumbsDir.getAbsolutePath()+File.separator+thumbName+".png"));
-//	        localVideoList.add(vItem);
-//		}
-//        
-//        return localVideoList;
-//	}
+	private List<VideoItem> fetchCachedVideos(Context vContext) {
+		String selection = MediaStore.Video.Media.DATA +" like ?";
+        String[] selectionArgs = new String[]{"%"+getString(R.string.app_name)+"%"+Grapes.appCachedVideoDirName+"%"};
+        String[] projection = new String[]{
+        		MediaStore.Video.VideoColumns.DATA,
+        		MediaStore.Video.VideoColumns._ID,
+        		MediaStore.Video.VideoColumns.LATITUDE,
+        		MediaStore.Video.VideoColumns.LONGITUDE
+		};
+        Cursor videoCursor = vContext.getContentResolver().query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                projection, selection, selectionArgs, MediaStore.Video.Media.DATE_TAKEN + " DESC");
+        int count = videoCursor.getCount();
+        VideoItem vItem;
+        String thumbName;
+        List<VideoItem> localVideoList = new ArrayList<VideoItem>();
+        for(int i=0;i<count;i++)
+		{
+			vItem = new VideoItem();
+	        int videoColumnIndex = videoCursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA);
+	        videoCursor.moveToPosition(i);
+			vItem.setVideoPath(videoCursor.getString(videoColumnIndex));
+			
+			thumbName = vItem.getVideoPath();
+			int pos1 = thumbName.lastIndexOf(File.separator);
+			int pos2 = thumbName.lastIndexOf(".");
+			if (pos2 > 0) {
+				thumbName = thumbName.substring(pos1, pos2);
+			}
+			
+	        videoColumnIndex = videoCursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID);
+	        videoCursor.moveToPosition(i);
+	        vItem.setVideoURI(Uri.parse(MediaStore.Video.Media.EXTERNAL_CONTENT_URI.toString()+"/"+videoCursor.getString(videoColumnIndex)));
+	        vItem.setvThumbnail(BitmapFactory.decodeFile(Grapes.appCachedThumbsDir.getAbsolutePath()+File.separator+thumbName+".png"));
+	        localVideoList.add(vItem);
+		}
+        
+        Collections.sort(localVideoList, new Comparator<VideoItem>(){
+        	@Override
+            public int compare(final VideoItem object1, final VideoItem object2) {
+               return (int) (object1.getDisFromCurrentLocation() - object2.getDisFromCurrentLocation());
+            }
+        });
+        
+        return localVideoList;
+	}
 }

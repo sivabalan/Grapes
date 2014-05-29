@@ -9,7 +9,6 @@ import java.util.List;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -40,11 +39,9 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.MediaStore.Images.Thumbnails;
 import android.provider.Settings;
-import android.support.v4.app.Fragment;
+import android.provider.Settings.Secure;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
-import android.text.Layout;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -64,7 +61,6 @@ import com.dropbox.client2.session.AppKeyPair;
 import com.fruitmill.grapes.adapter.TabsPagerAdapter;
 import com.fruitmill.grapes.adapter.VideoItem;
 import com.fruitmill.grapes.utils.Utils;
-import com.google.android.gms.maps.SupportMapFragment;
 
 public class MainActivity extends FragmentActivity implements ActionBar.TabListener {
 	
@@ -86,7 +82,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	public static String[] remoteVideoList;
 	private Context mainApp;
 	
-	private LocationManager locationManager;
+	private LocationManager locationManager = null;
 	private Criteria criteria;
 	private String provider;
 	private MyLocationListener locationListener;
@@ -105,9 +101,10 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         setContentView(R.layout.activity_main);
         config = (Grapes)getApplication();
         mainApp = getApplicationContext();
+        Grapes.appContext = getApplicationContext();
         
-//        String deviceId = Secure.getString(this.getContentResolver(),Secure.ANDROID_ID);
-//        Toast.makeText(this, deviceId, Toast.LENGTH_SHORT).show();
+        String deviceId = Secure.getString(this.getContentResolver(),Secure.ANDROID_ID);
+        Toast.makeText(this, deviceId, Toast.LENGTH_SHORT).show();
         
         // Create app directories
         File directory = new File(Environment.getExternalStorageDirectory()+File.separator+getString(R.string.app_name)+File.separator+Grapes.appVideoDirName);
@@ -173,12 +170,12 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		
 		// Get the location manager
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-		
+
 		// Define the criteria how to select the location provider
 		criteria = new Criteria();
 		criteria.setAccuracy(Criteria.ACCURACY_FINE);	
 
-		criteria.setCostAllowed(false); 
+		criteria.setCostAllowed(true); 
 
 		// get the best provider depending on the criteria
 		provider = locationManager.getBestProvider(criteria, false);
@@ -198,8 +195,43 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// location updates: at least 1 meter and 200millsecs change
 		locationManager.requestLocationUpdates(provider, Grapes.locationUpdateInterval, 1, locationListener);
 		
-		
     }
+    
+    @Override
+	public void onWindowFocusChanged(boolean hasFocus) {
+		// TODO Auto-generated method stub
+		super.onWindowFocusChanged(hasFocus);
+		
+//		if(hasFocus && locationManager == null)
+//		{
+//			// Get the location manager
+//			locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+//	
+//			// Define the criteria how to select the location provider
+//			criteria = new Criteria();
+//			criteria.setAccuracy(Criteria.ACCURACY_FINE);	
+//	
+//			criteria.setCostAllowed(false); 
+//	
+//			// get the best provider depending on the criteria
+//			provider = locationManager.getBestProvider(criteria, false);
+//	
+//			// the last known location of this provider
+//			Location location = locationManager.getLastKnownLocation(provider);
+//	
+//			locationListener = new MyLocationListener();
+//	
+//			if (location != null) {
+//				locationListener.onLocationChanged(location);
+//			} else {
+//				// leads to the settings because there is no last known location
+//				Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+//				startActivity(intent);
+//			}
+//			// location updates: at least 1 meter and 200millsecs change
+//			locationManager.requestLocationUpdates(provider, Grapes.locationUpdateInterval, 1, locationListener);
+//		}
+	}
 
     private class MyLocationListener extends FragmentActivity implements LocationListener  {
 
@@ -209,7 +241,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     		String op = "Latitude: "+String.valueOf(loc.getLatitude()) +
     				"Longitude: "+String.valueOf(loc.getLongitude());
 
-    		location = loc;
+    		MainActivity.location = loc;
 
 //    		Fragment feeds = getSupportFragmentManager().findFragmentById(R.id.feedListView);
 //    		
@@ -221,7 +253,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 //				e.printStackTrace();
 //			}
     		
-    		//Toast.makeText(mainApp,  "Location changed : "+op, Toast.LENGTH_SHORT).show();
+    		Toast.makeText(mainApp,  "Location changed : "+op, Toast.LENGTH_SHORT).show();
     	}
 
     	@Override
@@ -261,7 +293,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			break;
 		case MAP_VIEW:
 			MapFragment mapFragment = (MapFragment)mAdapter.getFragment(MAP_VIEW);
-			if(feedVideoList == null)
+			if(feedVideoList == null || feedVideoList.size() < 1)
 			{
 				mapFragment.showAllVideosOnMapView();
 			}

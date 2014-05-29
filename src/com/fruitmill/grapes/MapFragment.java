@@ -50,6 +50,11 @@ public class MapFragment extends Fragment {
 	private FrameLayout vpVideoFrame;
 	
 	private GoogleMap googleMap;
+	
+	public Location getMapLocation() {
+		return this.googleMap.getMyLocation();
+	}
+	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState) {
@@ -82,17 +87,34 @@ public class MapFragment extends Fragment {
 		SupportMapFragment temp = (SupportMapFragment) fgm.findFragmentById(R.id.gMap);
 		googleMap = temp.getMap();
 		
-		CameraPosition cameraPosition = new CameraPosition.Builder().target(
-                new LatLng(MainActivity.location.getLatitude(), MainActivity.location.getLongitude())).zoom(12).build();
- 
-		googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+		Location tempLocation = null;
 		
-		// create marker
-		MarkerOptions marker = new MarkerOptions().position(new LatLng(MainActivity.location.getLatitude(), MainActivity.location.getLongitude())).title("You are here!");
+		if(MainActivity.location != null)
+		{
+			Log.v("Location Thing","Got from MainActivity");
+			tempLocation = MainActivity.location;
+		}
+//		else
+//		{
+//			Log.v("Location Thing","Got from map");
+//			tempLocation = googleMap.getMyLocation();			
+//		}
 		
-		// adding marker
-		Marker locationMarker = googleMap.addMarker(marker);
-		locationMarker.showInfoWindow();
+		if(tempLocation != null)
+		{
+			CameraPosition cameraPosition = new CameraPosition.Builder().target(
+	                new LatLng(tempLocation.getLatitude(), tempLocation.getLongitude())).zoom(12).build();
+	 
+			googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+			
+			// create marker
+			MarkerOptions marker = new MarkerOptions().position(new LatLng(tempLocation.getLatitude(), tempLocation.getLongitude())).title("You are here!");
+			
+			// adding marker
+			Marker locationMarker = googleMap.addMarker(marker);
+			locationMarker.showInfoWindow();
+		}
+		
 		
 		googleMap.getUiSettings().setZoomControlsEnabled(false);
 		googleMap.getUiSettings().setMyLocationButtonEnabled(true);
@@ -140,7 +162,7 @@ public class MapFragment extends Fragment {
 		            //Log.v("zoomLevel",Double.toString(currentZoom));
 		        }
 		        
-		        if(fetchAdditionalMarkers)
+		        if(fetchAdditionalMarkers && MainActivity.location != null)
 		        {
 		        	showAllVideosOnMapView();
 		        }
@@ -153,10 +175,12 @@ public class MapFragment extends Fragment {
 
 			@Override
 			public boolean onMarkerClick(Marker marker) {
-				
-				vpVideoFrame.setVisibility(View.VISIBLE);
-				vpVideoView.setVideoURI(Uri.parse(marker.getTitle()));
-				vpVideoView.start();
+				if(marker.getTitle() != null)
+				{
+					vpVideoFrame.setVisibility(View.VISIBLE);
+					vpVideoView.setVideoURI(Uri.parse(marker.getTitle()));
+					vpVideoView.start();
+				}
 				return true;
 			}
 		});
@@ -279,7 +303,10 @@ public class MapFragment extends Fragment {
 		// Locate the first location
 		googleMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
 		
-		showAllVideosOnMapView();
+		if(MainActivity.location != null)
+		{
+			showAllVideosOnMapView();
+		}
 		
 	}
 	
@@ -299,7 +326,12 @@ public class MapFragment extends Fragment {
 				nameValuePairs.add(new BasicNameValuePair("vc", "1000"));
 
 				final List<VideoItem> videoList = Utils.doGrapesQuery(nameValuePairs);
-
+				
+				if(videoList == null)
+				{
+					return;
+				}
+				
 				getActivity().runOnUiThread(new Runnable() {
 
 					@Override

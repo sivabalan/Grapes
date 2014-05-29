@@ -1,7 +1,14 @@
 package com.fruitmill.grapes.utils;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,19 +23,30 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.Activity;
+import android.content.ContentValues;
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Base64;
-import android.util.Log;
-import android.widget.Toast;
+import android.widget.ImageButton;
 
 import com.fruitmill.grapes.Grapes;
 import com.fruitmill.grapes.MainActivity;
+import com.fruitmill.grapes.R;
 import com.fruitmill.grapes.adapter.VideoItem;
 
 public class Utils {
-    
+	
+	private static boolean isVideoSaved = true;
+	
     public static String imageFileToString(String imgFilePath) throws IOException {
     	Bitmap bm = BitmapFactory.decodeFile(imgFilePath);
     	ByteArrayOutputStream baos = new ByteArrayOutputStream();  
@@ -42,6 +60,17 @@ public class Utils {
     	byte[] decodedString = Base64.decode(b64ImageString, Base64.DEFAULT);
     	Bitmap decodedImage = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
     	return decodedImage; 
+    }
+
+	public static boolean isOnline(Activity act) {
+    	
+        ConnectivityManager conMgr = (ConnectivityManager) act.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = conMgr.getActiveNetworkInfo();
+
+        if (netInfo == null || !netInfo.isConnected() || !netInfo.isAvailable()) {
+            return false;
+        }
+        return true;
     }
     
     public static List<VideoItem> doGrapesQuery(List<NameValuePair> params) {
@@ -90,6 +119,96 @@ public class Utils {
     	return localVideoList;
     }
     
+    
+    public static boolean saveVideoFromFeed(final VideoItem vItem, ImageButton vDown) {
+    	vDown.setImageResource(R.id.progress_circular);
+    	Thread t = new Thread() {
+    		public void run()
+    		{
+    			isVideoSaved = saveOneVideo(vItem.getVideoURI().toString(), vItem.getvLat(), vItem.getvLon(), vItem.getvThumbnail());
+    		}
+    	};
+    	t.start();
+    	try {
+			t.join();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			isVideoSaved = false;
+			e.printStackTrace();
+		}
+    	if(isVideoSaved)
+    	{
+    		vDown.setImageResource(R.drawable.ic_action_delete);
+    		// Add listener for deleting cached video
+    	}
+    	else
+    	{
+    		vDown.setImageResource(R.drawable.ic_action_download);
+    	}
+    	return isVideoSaved;
+    }
+    
+    
+	// Assuming it is not running on UI thread
+    public static boolean saveOneVideo(final String link, final double lat, final double lon, final Bitmap thumb) {
+    	//File videoData = new File(Uri.parse(link));
+    	boolean hasDownloaded = true;
+    	try {
+    		URL url = new URL(link);
+    		URLConnection connection = url.openConnection();
+    		InputStream in = connection.getInputStream();
+    		File cachedVideoFile = new File(Grapes.appCachedVideoDir, Integer.toString(link.hashCode()) + ".mp4");
+    		FileOutputStream fos = new FileOutputStream(cachedVideoFile);
+    		byte[] buf = new byte[512];
+    		while (true) {
+    			int len = in.read(buf);
+    			if (len == -1) {
+    				break;
+    			}
+    			fos.write(buf, 0, len);
+    		}
+    		in.close();
+    		fos.flush();
+    		fos.close();
+
+    		File cachedThumbFile = new File(Grapes.appCachedThumbsDir, Integer.toString(link.hashCode()) + ".png");
+    		try {
+    			FileOutputStream fOut = new FileOutputStream(cachedThumbFile);
+
+    			thumb.compress(Bitmap.CompressFormat.PNG, 85, fOut);
+    			fOut.flush();
+    			fOut.close();
+    		} catch (FileNotFoundException e) {
+    			e.printStackTrace();
+    		} catch (IOException e) {
+    			e.printStackTrace();
+    		}
+    		
+    		Grapes.appContext.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(cachedVideoFile)));
+    		Grapes.appContext.sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(cachedThumbFile)));
+
+    		ContentValues values = new ContentValues(2);
+    		values.put(MediaStore.Video.VideoColumns.LATITUDE, lat);
+    		values.put(MediaStore.Video.VideoColumns.LONGITUDE, lon);
+
+    		geoLocUpdate(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, 
+    				values, 
+    				MediaStore.Video.VideoColumns.DATA + " LIKE ?", new String[] { cachedVideoFile.getAbsolutePath() }, 
+    				cachedVideoFile.getAbsolutePath(), cachedThumbFile.getAbsolutePath());
+
+    	} catch (MalformedURLException e) {
+    		// TODO Auto-generated catch block
+    		e.printStackTrace();
+    		hasDownloaded = false;
+    	} catch (IOException e) {
+    		// TODO Auto-generated catch block
+    		e.printStackTrace();
+    		hasDownloaded = false;
+    	}
+		    
+    	return hasDownloaded;
+    }
+    
     public static boolean isFeedUpdateNecessary() {
     	if(MainActivity.prevLocation == null)
     	{
@@ -101,4 +220,45 @@ public class Utils {
     	}
     	return false;
     }
+    
+	public static void geoLocUpdate(Uri uri, ContentValues values, String where, String[] selectionArgs, String vFilePath, String tFilePath)
+	{
+		Bundle args = new Bundle();
+		args.putParcelable  ("URI", uri);
+		args.putParcelable  ("VALUES", values);
+		args.putString      ("WHERE", where);
+		args.putStringArray ("SELECTION_ARGS", selectionArgs);
+		args.putStringArray	("FILE_PATHS", new String[] { vFilePath, tFilePath });
+		
+		new Utils().new AsyncUpdate().execute(args);
+		
+	}
+
+	final class AsyncUpdate extends AsyncTask<Bundle, Void, Integer>
+	{
+		@Override
+		protected Integer doInBackground(Bundle... params) {
+			Bundle args = params[0];
+			Uri             uri             = args.getParcelable("URI");
+			ContentValues   values          = args.getParcelable("VALUES");
+			String          where           = args.getString("WHERE");
+			String[]        selectionArgs   = args.getStringArray("SELECTION_ARGS");
+			String[]		fPaths			= args.getStringArray("FILE_PATHS");
+			
+			int rowsUpdated = 0;
+			while (rowsUpdated != 1)
+			{
+				rowsUpdated = Grapes.appContext.getContentResolver().update(uri, values, where, selectionArgs);
+			}
+			
+			return 1;
+		}
+
+		@Override
+		protected void onPostExecute(Integer flag)
+		{
+			
+		}
+		
+	}
 }

@@ -95,7 +95,7 @@ public class MyVideosFragment extends Fragment implements OnRefreshListener {
 		}
 		else
 		{
-			myVideosListAdapter = new VideoListAdapter(MainActivity.feedVideoList.size(), rootView.getContext(), MainActivity.feedVideoList, rootView, "feed");
+			myVideosListAdapter = new VideoListAdapter(MainActivity.feedVideoList.size(), rootView.getContext(), MainActivity.feedVideoList, rootView, "my_videos");
 			videoListView.setAdapter(myVideosListAdapter);
 		}
         
@@ -153,6 +153,7 @@ public class MyVideosFragment extends Fragment implements OnRefreshListener {
 					MainActivity.myVideosList.add(vItem);
 				}
 
+							
 				getActivity().runOnUiThread(new Runnable() {
 
 					@Override

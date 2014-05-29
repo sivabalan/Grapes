@@ -3,8 +3,10 @@ package com.fruitmill.grapes;
 import java.io.File;
 
 import android.app.Application;
+import android.content.Context;
 
 public class Grapes extends Application {
+	public static Context appContext = null;
 	public static File appRootDir,appVideoDir,appThumbsDir,appCachedVideoDir,appCachedThumbsDir;
 	public static String appVideoDirName = "captured_videos";
 	public static String appThumbsDirName = "captured_thumbs";
@@ -13,11 +15,11 @@ public class Grapes extends Application {
 	public static int feedUpdateThresholdDistance = 50; // In meters 
 	public static int minMapDistBeforeFetchingMarkers = 1000; // In meters
 	public static int videoDuration = 60;
-	public static int locationUpdateInterval = 5000; // In milliseconds
-	public static int videoRadius = 3000; // In meters
+	public static int locationUpdateInterval = 100; // In milliseconds
+	public static int videoRadius = 6000; // In meters
 	public static int videoFetchCount = 10;
-	//public static String backendUrl = "http://trellis.lordnahor.kd.io:4444/";
-	public static String backendUrl = "http://192.168.0.14:4444/";
+	//public static String backendUrl = "http://deception:4444/";
+	public static String backendUrl = "http://vm-1.lordnahor.koding.kd.io/";
 	
 	public static String sampleImageB64 = "iVBORw0KGgoAAAANSUhEUgAAAPAAAAFACAIAAAANimYEAAAAA3NCSVQICAjb4U/gAAAgAElEQVR4\n" + 
 			"nOy9QYslSZYu9j1hAcfAA8whEq5DJtSFKuhIpkCZTC0qoRadMILpRouZQQu95gn0eqennfQTtHq8\n" + 

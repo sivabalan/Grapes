@@ -1,6 +1,9 @@
 package com.fruitmill.grapes.adapter;
 
+import com.fruitmill.grapes.MainActivity;
+
 import android.graphics.Bitmap;
+import android.location.Location;
 import android.net.Uri;
 
 public class VideoItem {
@@ -86,7 +89,10 @@ public class VideoItem {
 	}
 
 	public double getDisFromCurrentLocation() {
-		return disFromCurrentLocation;
+		Location loc = new Location("");
+        loc.setLatitude(this.vLat);
+        loc.setLongitude(this.vLon);
+        return loc.distanceTo(MainActivity.location);
 	}
 
 	public void setDisFromCurrentLocation(double disFromCurrentLocation) {
