@@ -73,33 +73,54 @@ public class VideoListAdapter extends BaseAdapter {
         }
         
         final int itemPosition = position;
-        if (videoItemRow == null) {
+        if (videoItemRow == null || videoItemRow.getHeight() == 0) {
         	if(callingFragment == "feed")
         	{
         		videoItemRow = 	inflater.inflate(R.layout.list_video_item, parent, false);
-        		
-        		final ImageButton vDownload = (ImageButton) videoItemRow.findViewById(R.id.vi_download);
-        		vDownload.setOnClickListener(new OnClickListener() {
-					
-					@Override
-					public void onClick(View v) {
-						Utils.saveVideoFromFeed(cItem, vDownload);
-					}
-				});
-        		
-        		final ImageButton vReport = (ImageButton) videoItemRow.findViewById(R.id.vi_report_video);
-        		vReport.setOnClickListener(new OnClickListener() {
-					
-					@Override
-					public void onClick(View v) {
-						Utils.reportVideo(cItem);
-					}
-				});
         	}
         	else
         	{
         		videoItemRow = 	inflater.inflate(R.layout.list_video_item_my_videos, parent, false);
         	}
+        }
+        
+        if(callingFragment == "feed")
+        {
+        	final ImageButton vDownload = (ImageButton) videoItemRow.findViewById(R.id.vi_download);
+        	vDownload.setOnClickListener(new OnClickListener() {
+
+        		@Override
+        		public void onClick(View v) {
+        			Utils.saveVideoFromFeed(cItem, vDownload);
+        		}
+        	});
+
+        	ImageButton vReport = (ImageButton) videoItemRow.findViewById(R.id.vi_report_video);
+        	vReport.setOnClickListener(new OnClickListener() {
+
+        		@Override
+        		public void onClick(View v) {
+        			Utils.reportVideo(cItem);
+        		}
+        	});
+
+        	ImageButton vRateUp = (ImageButton) videoItemRow.findViewById(R.id.vi_thumbs_up);
+        	vRateUp.setOnClickListener(new OnClickListener() {
+
+        		@Override
+        		public void onClick(View v) {
+        			Utils.rateVideo(cItem, "up");
+        		}
+        	});
+
+        	ImageButton vRateDown = (ImageButton) videoItemRow.findViewById(R.id.vi_thumbs_down);
+        	vRateDown.setOnClickListener(new OnClickListener() {
+
+        		@Override
+        		public void onClick(View v) {
+        			Utils.rateVideo(cItem, "down");
+        		}
+        	});
         }
         
         ImageView imageThumbnail = (ImageView) videoItemRow.findViewById(R.id.vi_thumbnail);

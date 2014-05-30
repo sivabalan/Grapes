@@ -577,6 +577,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		Map<String, Object> jsonValues = new HashMap<String, Object>();
 	    jsonValues.put("thumbnail", vItem.getThumbBase64());
 	    jsonValues.put("link" , vItem.getVideoURI().toString());
+	    jsonValues.put("video_id", Utils.generateVideoID(vItem.getVideoPath()));
 	    JSONObject json = new JSONObject(jsonValues);
 
 	    AbstractHttpEntity entity = null;

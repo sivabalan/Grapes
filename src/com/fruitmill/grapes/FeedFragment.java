@@ -71,6 +71,7 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 		{
 			return videoListView.getFirstVisiblePosition() != 0;
 		}
+		
 	}
 	
 	@Override

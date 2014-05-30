@@ -13,7 +13,7 @@ public class Grapes extends Application {
 	public static String appCachedVideoDirName = "cached_videos";
 	public static String appCachedThumbsDirName = "cached_thumbs";
 	public static int feedUpdateThresholdDistance = 50; // In meters 
-	public static int minMapDistBeforeFetchingMarkers = 1000; // In meters
+	public static int minMapDistBeforeFetchingMarkers = 10; // In percentage
 	public static int videoDuration = 60;
 	public static int locationUpdateInterval = 100; // In milliseconds
 	public static int videoRadius = 6000; // In meters

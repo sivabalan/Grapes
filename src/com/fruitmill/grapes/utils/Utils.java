@@ -40,8 +40,6 @@ import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.ImageButton;
 
 import com.fruitmill.grapes.Grapes;
@@ -113,7 +111,7 @@ public class Utils {
 					vItem.setvLon(jsonVideoItem.getDouble("lon"));
 					vItem.setDisFromCurrentLocation(jsonVideoItem.getDouble("distance"));
 					vItem.setvThumbnail(Utils.stringToImageFile(jsonVideoItem.getString("thumbnail")));
-					//vItem.setVideoID(jsonVideoItem.getString("video_id"));
+					vItem.setVideoID(jsonVideoItem.getString("video_id"));
 					vItem.setDisplayAddress(jsonVideoItem.getString("address"));
 					
 					localVideoList.add(vItem);
@@ -132,13 +130,28 @@ public class Utils {
     	return localVideoList;
     }
     
-    public static void reportVideo(final VideoItem vItem) {
+    public static String generateVideoID(String path) {
+    	String videoId = addPadding(MainActivity.deviceId)+addPadding(Integer.toString(path.hashCode()));
+    	return videoId;
+    }
+    
+    public static String addPadding(String str) {
+    	String paddedString = "";
+    	int paddingLimit = 20 - str.length();
+    	for(int i=0; i < paddingLimit; i++)
+    	{
+    		paddedString += "0";
+    	}
+    	return paddedString+str;
+    }
+    
+    public static void videoAction(final VideoItem vItem, final String action) {
     	Thread t = new Thread() {
     		public void run() {
 
     			String url = Grapes.backendUrl;
     			List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
-    			nameValuePairs.add(new BasicNameValuePair("action", "report"));
+    			nameValuePairs.add(new BasicNameValuePair("action", action));
     			nameValuePairs.add(new BasicNameValuePair("video_id", vItem.getVideoID()));
     			nameValuePairs = Utils.attachDeviceId(nameValuePairs);
     			
@@ -146,10 +159,10 @@ public class Utils {
     			
     			HttpClient httpClient = new DefaultHttpClient();
     			
-    			HttpPost httpPost = new HttpPost(url + "?" + paramsString);
+    			HttpGet httpGet = new HttpGet(url + "?" + paramsString);
     			
     			try {
-    				HttpResponse response = httpClient.execute(httpPost);
+    				HttpResponse response = httpClient.execute(httpGet);
     				Log.v("INFO: Report video",response.toString());
     			} catch (IOException e) {
     				// TODO Auto-generated catch block
@@ -161,8 +174,19 @@ public class Utils {
     	return;
     }
     
-    public static boolean saveVideoFromFeed(final VideoItem vItem, ImageButton vDown) {
+    public static void reportVideo(VideoItem vItem) 
+    {
+    	videoAction(vItem, "report");
+    }
+    
+    public static void rateVideo(VideoItem vItem, String rateType)
+    {
+    	videoAction(vItem, rateType);
+    }
+    
+    public static void saveVideoFromFeed(final VideoItem vItem, ImageButton vDown) {
     	vDown.setImageResource(R.id.progress_circular);
+    	isVideoSaved = true;
     	Thread t = new Thread() {
     		public void run()
     		{
@@ -186,7 +210,7 @@ public class Utils {
     	{
     		vDown.setImageResource(R.drawable.ic_action_download);
     	}
-    	return isVideoSaved;
+    	//return isVideoSaved;
     }
     
     

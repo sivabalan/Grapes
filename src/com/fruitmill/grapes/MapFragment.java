@@ -152,7 +152,9 @@ public class MapFragment extends Fragment {
 		            
 		        	double newVisibleRadius = getVisibleMapRadius();
 		        	
-		        	if(newVisibleRadius - currentVisibleRadius > Grapes.minMapDistBeforeFetchingMarkers)
+		        	double percentDiffRadius = (newVisibleRadius - currentVisibleRadius) * 100 / currentVisibleRadius;
+		        	
+		        	if(percentDiffRadius > Grapes.minMapDistBeforeFetchingMarkers)
 		        	{
 		        		fetchAdditionalMarkers = true;
 		        	}
@@ -204,8 +206,9 @@ public class MapFragment extends Fragment {
 		return center.distanceTo(MiddleLeftCornerLocation); //calculate distance between middleLeftcorner and center
 	}
 	
+	// Second parameter decides no. of suggestions to get. If 1: then just navigates to retrieved place. Else lists 3 suggestions.
 	public void findPlaces(String location) {
-		new GeocoderTask().execute(location, 1);
+		new GeocoderTask().execute(location, 1); 
 	}
 	
 	public void loadSuggestions(String location) {
