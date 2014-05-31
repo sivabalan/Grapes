@@ -87,35 +87,6 @@ public class MapFragment extends Fragment {
 		SupportMapFragment temp = (SupportMapFragment) fgm.findFragmentById(R.id.gMap);
 		googleMap = temp.getMap();
 		
-		Location tempLocation = null;
-		
-		if(MainActivity.location != null)
-		{
-			Log.v("Location Thing","Got from MainActivity");
-			tempLocation = MainActivity.location;
-		}
-//		else
-//		{
-//			Log.v("Location Thing","Got from map");
-//			tempLocation = googleMap.getMyLocation();			
-//		}
-		
-		if(tempLocation != null)
-		{
-			CameraPosition cameraPosition = new CameraPosition.Builder().target(
-	                new LatLng(tempLocation.getLatitude(), tempLocation.getLongitude())).zoom(12).build();
-	 
-			googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-			
-			// create marker
-			MarkerOptions marker = new MarkerOptions().position(new LatLng(tempLocation.getLatitude(), tempLocation.getLongitude())).title("You are here!");
-			
-			// adding marker
-			Marker locationMarker = googleMap.addMarker(marker);
-			locationMarker.showInfoWindow();
-		}
-		
-		
 		googleMap.getUiSettings().setZoomControlsEnabled(false);
 		googleMap.getUiSettings().setMyLocationButtonEnabled(true);
 		googleMap.setMyLocationEnabled(true);
@@ -190,6 +161,33 @@ public class MapFragment extends Fragment {
 		return rootView;
 	}
 	
+	public void moveToCurrentLocation() {
+		CameraPosition cameraPosition = new CameraPosition.Builder().target(
+				new LatLng(MainActivity.location.getLatitude(), MainActivity.location.getLongitude())).zoom(12).build();
+
+		googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+		
+		googleMap.setOnCameraChangeListener(new OnCameraChangeListener() {
+			
+			Marker locationMarker = null;
+			
+			@Override
+			public void onCameraChange(CameraPosition arg0) {
+				
+				if(locationMarker != null)
+				{
+					locationMarker.remove();
+				}
+				// create marker
+				MarkerOptions myMarker = new MarkerOptions().position(new LatLng(MainActivity.location.getLatitude(), MainActivity.location.getLongitude())).title("You are here!");
+
+				// adding marker
+				locationMarker = googleMap.addMarker(myMarker);
+				locationMarker.showInfoWindow();
+			}
+		});
+
+	}
 	
 	public double getVisibleMapRadius() {
 		VisibleRegion vr = googleMap.getProjection().getVisibleRegion();

@@ -17,29 +17,14 @@ public class TabsPagerAdapter extends FragmentPagerAdapter {
 	public TabsPagerAdapter(FragmentManager fm) {
 		super(fm);
 		fragmentTrackerMap = new HashMap<Integer,Fragment>();
+		fragmentTrackerMap.put(0, new FeedFragment());
+		fragmentTrackerMap.put(1, new MapFragment());
+		fragmentTrackerMap.put(2, new MyVideosFragment());
 	}
 
 	@Override
 	public Fragment getItem(int index) {
-		
-		Fragment tempFragment = null; 
-		
-		switch (index) {
-		case 0:
-			// Feed fragment activity
-			tempFragment = new FeedFragment();
-			break;
-		case 1:
-			// Map fragment activity
-			tempFragment = new MapFragment();
-			break;
-		case 2:
-			// My videos fragment activity
-			tempFragment = new MyVideosFragment();
-			break;
-		}
-		fragmentTrackerMap.put(index, tempFragment);
-		return tempFragment;
+		return fragmentTrackerMap.get(index);
 	}
 
 	@Override

@@ -284,6 +284,10 @@ public class Utils {
     	{
     		return true;
     	}
+    	if(MainActivity.feedVideoList == null)
+    	{
+    		return true;
+    	}
     	return false;
     }
     

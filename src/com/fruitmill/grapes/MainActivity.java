@@ -26,21 +26,26 @@ import org.json.JSONObject;
 
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
+import android.app.AlertDialog;
 import android.app.FragmentTransaction;
+import android.app.ProgressDialog;
 import android.app.SearchManager;
+import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.location.Address;
-import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.ThumbnailUtils;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -68,6 +73,7 @@ import com.dropbox.client2.DropboxAPI;
 import com.dropbox.client2.android.AndroidAuthSession;
 import com.dropbox.client2.session.AccessTokenPair;
 import com.dropbox.client2.session.AppKeyPair;
+import com.fruitmill.grapes.FeedFragment.ViewCreatedListener;
 import com.fruitmill.grapes.adapter.TabsPagerAdapter;
 import com.fruitmill.grapes.adapter.VideoItem;
 import com.fruitmill.grapes.utils.Utils;
@@ -84,17 +90,14 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private static final int MY_VIDEOS_VIEW = 2;
 	private String[] tabs = { "Feed", "Map", "My Videos" };
 	private static final int ACTION_TAKE_VIDEO = 1;
-	private Grapes config;
 	private Uri mVideoUri;
 	private File capturedVideoFile, capturedThumbFile;
 	private boolean mLoggedIn;
 	DropboxAPI<AndroidAuthSession> mApi;
 	public static String[] remoteVideoList;
-	private Context mainApp;
 	
+	private ProgressDialog locationProgressDialog;
 	private LocationManager locationManager = null;
-	private Criteria criteria;
-	private String provider;
 	private MyLocationListener locationListener;
 	
 	public static ImageView cameraIcon;
@@ -107,6 +110,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	public static String deviceId = ""; 
 	public static Date lastLocUpdated;
 	
+	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -114,8 +118,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
         mApi = new DropboxAPI<AndroidAuthSession>(session);
 		
         setContentView(R.layout.activity_main);
-        config = (Grapes)getApplication();
-        mainApp = getApplicationContext();
         Grapes.appContext = getApplicationContext();
         
         deviceId = Secure.getString(this.getContentResolver(),Secure.ANDROID_ID);
@@ -185,21 +187,19 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		
 		appStatus = (TextView) findViewById(R.id.appStatusLabel);
 		
+		locationProgressDialog = ProgressDialog.show(this, "Location status", "Getting your location..");
+
 		// Get the location manager
 		locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
-		// Define the criteria how to select the location provider
-		criteria = new Criteria();
-		criteria.setAccuracy(Criteria.ACCURACY_FINE);	
-
-		criteria.setCostAllowed(true); 
-
-		// get the best provider depending on the criteria
-		provider = locationManager.getBestProvider(criteria, false);
-
 		// the last known location of this provider
-		Location location = locationManager.getLastKnownLocation(provider);
+		Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
+		if(location == null)
+		{
+			location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+		}
+		
 		locationListener = new MyLocationListener();
 
 		if (location != null) {
@@ -210,46 +210,13 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			startActivity(intent);
 		}
 		// location updates: at least 1 meter and 200millsecs change
-		locationManager.requestLocationUpdates(provider, Grapes.locationUpdateInterval, 1, locationListener);
+		locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, Grapes.locationUpdateInterval, 1, locationListener);
+		locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, Grapes.locationUpdateInterval, 1, locationListener);
+		
+		registerReceiver(new ConnectionReceiver(), new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
 		
     }
     
-    @Override
-	public void onWindowFocusChanged(boolean hasFocus) {
-		// TODO Auto-generated method stub
-		super.onWindowFocusChanged(hasFocus);
-		
-//		if(hasFocus && locationManager == null)
-//		{
-//			// Get the location manager
-//			locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-//	
-//			// Define the criteria how to select the location provider
-//			criteria = new Criteria();
-//			criteria.setAccuracy(Criteria.ACCURACY_FINE);	
-//	
-//			criteria.setCostAllowed(false); 
-//	
-//			// get the best provider depending on the criteria
-//			provider = locationManager.getBestProvider(criteria, false);
-//	
-//			// the last known location of this provider
-//			Location location = locationManager.getLastKnownLocation(provider);
-//	
-//			locationListener = new MyLocationListener();
-//	
-//			if (location != null) {
-//				locationListener.onLocationChanged(location);
-//			} else {
-//				// leads to the settings because there is no last known location
-//				Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-//				startActivity(intent);
-//			}
-//			// location updates: at least 1 meter and 200millsecs change
-//			locationManager.requestLocationUpdates(provider, Grapes.locationUpdateInterval, 1, locationListener);
-//		}
-	}
-
     private class MyLocationListener extends FragmentActivity implements LocationListener  {
 
     	@Override
@@ -259,15 +226,26 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     				"Longitude: "+String.valueOf(loc.getLongitude());
 
     		MainActivity.location = loc;
-//    		Fragment feeds = getSupportFragmentManager().findFragmentById(R.id.feedListView);
-//    		
-//    		try {
-//				((FeedFragment) feeds).fetchVideos();
-//			} catch (NullPointerException e) {
-//				// TODO Auto-generated catch block
-//				Log.v("hi","bye");
-//				e.printStackTrace();
-//			}
+    		if(locationProgressDialog.isShowing())
+    		{
+    			locationProgressDialog.dismiss();
+    		}
+    		
+    		if(Utils.isFeedUpdateNecessary())
+    		{
+    			final FeedFragment feedFragment = (FeedFragment)mAdapter.getFragment(FEED_VIEW);
+    			feedFragment.setVariableChangeListener(new ViewCreatedListener() {
+					
+					@Override
+					public void onViewCreated(boolean viewExists) {
+						if(Utils.isFeedUpdateNecessary() && viewExists)
+						{
+							feedFragment.fetchVideos();
+						}
+					}
+				});
+    			
+    		}
     		
     		//Toast.makeText(mainApp,  "Location changed : "+op, Toast.LENGTH_SHORT).show();
     	}
@@ -289,6 +267,41 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     	}
     }
     
+    public class ConnectionReceiver extends BroadcastReceiver {
+
+        private AlertDialog alertDialog;
+
+        public ConnectionReceiver() {
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals("android.net.conn.CONNECTIVITY_CHANGE")) {
+                ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+                NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+                boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+                if (isConnected) {
+                    try {
+                        if (alertDialog != null && alertDialog.isShowing())
+                            alertDialog.dismiss();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    if (alertDialog == null || !alertDialog.isShowing()) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                        builder.setTitle("No internet connection");
+                        builder.setMessage("Check your connection.");
+                        builder.setCancelable(false);
+                        alertDialog = builder.create();
+                        alertDialog.show();
+                    }
+                }
+            }
+        }
+    }
+    
 	@Override
 	public void onTabReselected(Tab tab, FragmentTransaction ft) {
 		// TODO Auto-generated method stub
@@ -308,6 +321,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			break;
 		case MAP_VIEW:
 			MapFragment mapFragment = (MapFragment)mAdapter.getFragment(MAP_VIEW);
+			mapFragment.moveToCurrentLocation();
 			if(feedVideoList == null || feedVideoList.size() < 1)
 			{
 				mapFragment.showAllVideosOnMapView();
@@ -646,6 +660,19 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	@Override
     protected void onResume() {
         super.onResume();
+        if(MainActivity.location == null)
+        {
+        	locationProgressDialog.show();
+        }
+        if(MainActivity.lastLocUpdated == null)
+        {
+        	FeedFragment feedFragment = (FeedFragment)mAdapter.getFragment(FEED_VIEW);
+        	if(feedFragment.isViewExists)
+        	{
+        		feedFragment.viewCreatedListener.onViewCreated(feedFragment.isViewExists);
+        	}
+        }
+        
         AndroidAuthSession session = mApi.getSession();
 
         // The next part must be inserted in the onResume() method of the

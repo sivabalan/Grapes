@@ -47,6 +47,8 @@ public class FeedFragment extends Fragment {
 	private View rootView;
 	private ListView videoListView;
 	private TextView lastUpdatedLabel;
+	public ViewCreatedListener viewCreatedListener;
+	public boolean isViewExists = false;
 	
 	private class PullToRefresh extends CustomSwipeRefreshLayout {
 		
@@ -89,6 +91,15 @@ public class FeedFragment extends Fragment {
 		}
 		
 		
+	}
+	
+	public interface ViewCreatedListener {
+        public void onViewCreated(boolean viewExists);
+    }
+	
+	public void setVariableChangeListener(ViewCreatedListener viewCreatedListener) 
+	{
+       this.viewCreatedListener = viewCreatedListener;
 	}
 	
 	@Override
@@ -159,11 +170,7 @@ public class FeedFragment extends Fragment {
 			}
 		});
 		
-		if(MainActivity.feedVideoList == null || Utils.isFeedUpdateNecessary())
-		{
-			fetchVideos();
-		}
-		else
+		if(MainActivity.feedVideoList != null)
 		{
 			feedListAdapter = new VideoListAdapter(MainActivity.feedVideoList.size(), rootView.getContext(), MainActivity.feedVideoList, rootView, "feed");
 			videoListView.setAdapter(feedListAdapter);
@@ -174,6 +181,12 @@ public class FeedFragment extends Fragment {
 		lastUpdatedLabel = (TextView) feedLayout.findViewById(R.id.lastUpdatedLabel);
 		
 		feedLayout.addView(swipeRefreshLayout, 0);
+		
+		isViewExists = true;
+		
+		if(this.viewCreatedListener != null) {
+			this.viewCreatedListener.onViewCreated(isViewExists);
+		}
 		
 		return feedLayout;
 	}
