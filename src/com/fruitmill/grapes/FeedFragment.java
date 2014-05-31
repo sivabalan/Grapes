@@ -18,8 +18,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v4.widget.SwipeRefreshLayout.OnRefreshListener;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -30,15 +28,17 @@ import android.widget.AbsListView.OnScrollListener;
 import android.widget.BaseAdapter;
 import android.widget.FrameLayout;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ToggleButton;
 import android.widget.VideoView;
 
 import com.fruitmill.grapes.adapter.VideoItem;
 import com.fruitmill.grapes.adapter.VideoListAdapter;
+import com.fruitmill.grapes.utils.CustomSwipeRefreshLayout;
 import com.fruitmill.grapes.utils.Utils;
 
-public class FeedFragment extends Fragment implements OnRefreshListener {
+public class FeedFragment extends Fragment {
 
 	private VideoView vpVideoView;
 	private FrameLayout vpVideoFrame;
@@ -46,24 +46,14 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 	private BaseAdapter feedListAdapter;
 	private View rootView;
 	private ListView videoListView;
+	private TextView lastUpdatedLabel;
 	
-	private String[] remoteVideoList = {
-			"https://www.dropbox.com/s/ny13me38k5ym2ay/955847023.mp4",
-			"http://dl.dropboxusercontent.com/1/view/ny13me38k5ym2ay/grapes-public/955847023.mp4",
-			"https://db.tt/fGGgbXK4",
-			"https://db.tt/aQtJ5RME",
-			"https://db.tt/7i9BkY6e",
-			"http://dl.dropboxusercontent.com/1/view/vrchc1ywv40lvbr/grapes-public/961572535",
-			"http://dl.dropboxusercontent.com/1/view/qobsyrdhj9inssd/grapes-public/-1387871915",
-			"http://dl.dropboxusercontent.com/1/view/v9salzyvfhqp1zt/grapes-public/1558049880",
-			"http://dl.dropboxusercontent.com/1/view/g8uicrz2jy9pmv6/grapes-public/1978224610",
-			"http://dl.dropboxusercontent.com/1/view/vkys6rlj7xjdfzl/grapes-public/133635181"
-	};
-	
-	private class PullToRefresh extends SwipeRefreshLayout {
+	private class PullToRefresh extends CustomSwipeRefreshLayout {
+		
+		private MotionEvent mDownEvent;
+				
 		public PullToRefresh(Context context) {
 			super(context);
-			// TODO Auto-generated constructor stub
 		}
 		
 		@Override
@@ -71,6 +61,33 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 		{
 			return videoListView.getFirstVisiblePosition() != 0;
 		}
+
+		
+		@Override
+		public boolean onTouchEvent(MotionEvent event) {
+			// TODO Auto-generated method stub
+			final int action = event.getAction();
+	        
+	        switch (action) {
+	            case MotionEvent.ACTION_DOWN:
+	            	mDownEvent = MotionEvent.obtain(event);
+	            	break;
+	            case MotionEvent.ACTION_MOVE:
+	            	
+	            	if(mDownEvent != null)
+	            	{
+	            		 final float eventY = event.getY();
+	                     float yDiff = eventY - mDownEvent.getY();
+	                     if(yDiff > lastUpdatedLabel.getMeasuredHeight() && lastUpdatedLabel.getText() == "")
+	                     {
+	                    	 lastUpdatedLabel.setText(Utils.getTimeSinceLastUpdate("updated"));
+	                     }
+	            	}
+	            	break;
+	        }
+			return super.onTouchEvent(event);
+		}
+		
 		
 	}
 	
@@ -104,9 +121,25 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 		
 		swipeRefreshLayout = new PullToRefresh(rootView.getContext());
 		swipeRefreshLayout.setBackgroundResource(R.color.dark_gray);
-        swipeRefreshLayout.addView(rootView);
+		swipeRefreshLayout.addView(rootView);
         swipeRefreshLayout.setColorScheme(R.color.purple1,R.color.purple2,R.color.purple3,R.color.purple4);
-        swipeRefreshLayout.setOnRefreshListener(this);
+                
+        swipeRefreshLayout.setOnRefreshListener(new CustomSwipeRefreshLayout.OnRefreshListener() {
+			
+        	@Override
+        	public void onRefresh() {
+        		fetchVideos();
+        	}
+		});
+        
+        swipeRefreshLayout.postAnimationHook =  new Runnable() {
+
+			@Override
+			public void run() {
+				lastUpdatedLabel.setText("");
+			}
+        	
+        };
 
 		videoListView = (ListView) rootView.findViewById(R.id.feedListView);
 		
@@ -123,7 +156,6 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 			public void onScroll(AbsListView view, int firstVisibleItem,
 					int visibleItemCount, int totalItemCount) {
 				// TODO Auto-generated method stub
-				
 			}
 		});
 		
@@ -137,11 +169,20 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 			videoListView.setAdapter(feedListAdapter);
 		}
         
-		return swipeRefreshLayout;
+		RelativeLayout feedLayout = (RelativeLayout) inflater.inflate(R.layout.fragment_swipe_container, container, false);
+
+		lastUpdatedLabel = (TextView) feedLayout.findViewById(R.id.lastUpdatedLabel);
+		
+		feedLayout.addView(swipeRefreshLayout, 0);
+		
+		return feedLayout;
 	}
 	
 	public void fetchVideos() {
-		Utils.setAppStatusLabel(R.string.picking_grapes);
+		if(MainActivity.feedVideoList == null || MainActivity.feedVideoList.size() < 1)
+		{
+			Utils.setAppStatusLabel(R.string.picking_grapes);
+		}
 		swipeRefreshLayout.setRefreshing(true);
 		if(MainActivity.location == null)
 		{
@@ -185,7 +226,7 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 						videoListView.setAdapter(feedListAdapter);
 						Utils.setAppStatusLabel(R.string.empty);
 						swipeRefreshLayout.setRefreshing(false);
-						
+						Utils.updateLastUpdatedTime();
 					}
 					
 				});
@@ -193,12 +234,6 @@ public class FeedFragment extends Fragment implements OnRefreshListener {
 		}.start();
 	}
 
-	@Override
-	public void onRefresh() {
-		fetchVideos();
-	}
-	
-	
 	private List<VideoItem> fetchCachedVideos(Context vContext) {
 		String selection = MediaStore.Video.Media.DATA +" like ?";
         String[] selectionArgs = new String[]{"%"+getString(R.string.app_name)+"%"+Grapes.appCachedVideoDirName+"%"};

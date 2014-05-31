@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -104,6 +105,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	public static List<VideoItem> feedVideoList = null;
 	public static List<VideoItem> myVideosList = null;
 	public static String deviceId = ""; 
+	public static Date lastLocUpdated;
+	
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -256,7 +259,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     				"Longitude: "+String.valueOf(loc.getLongitude());
 
     		MainActivity.location = loc;
-
 //    		Fragment feeds = getSupportFragmentManager().findFragmentById(R.id.feedListView);
 //    		
 //    		try {
@@ -547,7 +549,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		protected void onPostExecute(VideoItem vItem)
 		{
 			MyVideosFragment myVideosFragment = (MyVideosFragment)mAdapter.getFragment(MY_VIDEOS_VIEW);
-			myVideosFragment.fetchLocalVideos(getApplicationContext());
+			myVideosFragment.fetchLocalVideos();
 			Toast.makeText(MainActivity.this, "Video saved @ "+location.getLatitude()+ " : " +location.getLongitude(), Toast.LENGTH_SHORT).show();
 			
 		}

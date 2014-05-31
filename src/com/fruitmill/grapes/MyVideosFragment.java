@@ -89,22 +89,22 @@ public class MyVideosFragment extends Fragment implements OnRefreshListener {
 		
 		videoListView = (ListView) rootView.findViewById(R.id.myVideosListView);
         
-		if(MainActivity.feedVideoList == null)
+		if(MainActivity.myVideosList == null)
 		{
-			fetchLocalVideos(rootView.getContext());
+			fetchLocalVideos();
 		}
 		else
 		{
-			myVideosListAdapter = new VideoListAdapter(MainActivity.feedVideoList.size(), rootView.getContext(), MainActivity.feedVideoList, rootView, "my_videos");
+			myVideosListAdapter = new VideoListAdapter(MainActivity.myVideosList.size(), rootView.getContext(), MainActivity.myVideosList, rootView, "my_videos");
 			videoListView.setAdapter(myVideosListAdapter);
 		}
         
 		return swipeRefreshLayout;
 	}
 
-	public void fetchLocalVideos(final Context vContext) {
+	public void fetchLocalVideos() {
 		swipeRefreshLayout.setRefreshing(true);
-		
+		final Context vContext = Grapes.appContext;
 		new Thread() {
 			public void run() {
 				String selection = MediaStore.Video.Media.DATA +" like ?";
@@ -172,6 +172,6 @@ public class MyVideosFragment extends Fragment implements OnRefreshListener {
 	
 	@Override
 	public void onRefresh() {
-		fetchLocalVideos(rootView.getContext());
+		fetchLocalVideos();
 	}
 }

@@ -9,14 +9,15 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
@@ -339,4 +340,46 @@ public class Utils {
 	public static void setAppStatusLabel(int resId) {
 		MainActivity.appStatus.setText(resId);
 	}
+	
+	public static void updateLastUpdatedTime() {
+		Date cDate = new Date();
+		MainActivity.lastLocUpdated = cDate;
+	}
+	
+	public static String getTimeSinceLastUpdate(String action) {
+		Date cDate = new Date();
+		long ms = (cDate.getTime() - MainActivity.lastLocUpdated.getTime());
+		
+		int SECOND = 1000;
+		int MINUTE = 60 * SECOND;
+		int HOUR = 60 * MINUTE;
+		int DAY = 24 * HOUR;
+		
+		StringBuffer text = new StringBuffer("");
+		String timeText = "";
+		if (ms > DAY) {
+			timeText = (ms / DAY) > 1 ? " days " : " day ";
+			text.append(ms / DAY).append(timeText);
+			ms %= DAY;
+		}
+		else if (ms > HOUR) {
+			timeText = (ms / HOUR) > 1 ? " hours " : " hour ";
+			text.append(ms / HOUR).append(timeText);
+			ms %= HOUR;
+		}
+		else if (ms > MINUTE) {
+			timeText = (ms / MINUTE) > 1 ? " minutes " : " minute ";
+			text.append(ms / MINUTE).append(timeText);
+			ms %= MINUTE;
+		}
+		else if (ms > SECOND) {
+			timeText = (ms / SECOND) > 1 ? " seconds " : " second ";
+			text.append(ms / SECOND).append(timeText);
+			ms %= SECOND;
+		}
+		
+		return "Last "+action+" "+text+ "ago.";
+	}
+	
+	
 }
